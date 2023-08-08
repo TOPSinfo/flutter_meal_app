@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:progressive_image/progressive_image.dart';
 import '../models/meal.dart';
 import '../widgets/meal_item_trait.dart';
-import 'package:transparent_image/transparent_image.dart';
+
+enum DeviceType { phone, tablet }
+
+DeviceType getDeviceType() {
+  // ignore: deprecated_member_use
+  final data = MediaQueryData.fromView(WidgetsBinding.instance.window);
+  return data.size.shortestSide < 550 ? DeviceType.phone : DeviceType.tablet;
+}
 
 class MealItem extends StatelessWidget {
   const MealItem({
@@ -40,8 +48,9 @@ class MealItem extends StatelessWidget {
           children: [
             Hero(
               tag: meal.id,
-              child: FadeInImage(
-                placeholder: MemoryImage(kTransparentImage),
+              child: ProgressiveImage(
+                placeholder: null,
+                thumbnail: NetworkImage(meal.thumbUrl),
                 image: NetworkImage(meal.imageUrl),
                 fit: BoxFit.cover,
                 height: 200,
@@ -65,7 +74,7 @@ class MealItem extends StatelessWidget {
                       softWrap: true,
                       overflow: TextOverflow.ellipsis, // Very long text ...
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),

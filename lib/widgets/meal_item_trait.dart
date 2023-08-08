@@ -23,6 +23,7 @@ class MealItemTrait extends StatelessWidget {
         label,
         style: const TextStyle(
           color: Colors.white,
+          // fontSize: 10,
         ),
       ),
     ]);

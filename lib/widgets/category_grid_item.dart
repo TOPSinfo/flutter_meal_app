@@ -13,6 +13,16 @@ class CategoryGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: no_leading_underscores_for_local_identifiers
+    Widget _titleWidget(BuildContext context) {
+      return Text(
+        category.title,
+        style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
+      );
+    }
+
     return InkWell(
       onTap: onSelectCategory,
       splashColor: Theme.of(context).primaryColor,
@@ -29,12 +39,7 @@ class CategoryGridItem extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             )),
-        child: Text(
-          category.title,
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: Theme.of(context).colorScheme.onBackground,
-              ),
-        ),
+        child: _titleWidget(context),
       ),
     );
   }
