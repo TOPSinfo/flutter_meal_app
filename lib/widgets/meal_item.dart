@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:meal_app/main.dart';
 import 'package:progressive_image/progressive_image.dart';
 import '../models/meal.dart';
 import '../widgets/meal_item_trait.dart';
 
 enum DeviceType { phone, tablet }
 
-DeviceType getDeviceType() {
-  // ignore: deprecated_member_use
-  final data = MediaQueryData.fromView(WidgetsBinding.instance.window);
-  return data.size.shortestSide < 550 ? DeviceType.phone : DeviceType.tablet;
-}
-
 class MealItem extends StatelessWidget {
   const MealItem({
     super.key,
     required this.meal,
     required this.onSelectMeal,
+    required this.onAddToCart,
   });
 
   final Meal meal;
   final void Function(Meal meal) onSelectMeal;
+  final void Function(Meal meal) onAddToCart;
 
   String get complexityText {
     return meal.complexity.name[0].toUpperCase() +
@@ -47,7 +44,7 @@ class MealItem extends StatelessWidget {
         child: Stack(
           children: [
             Hero(
-              tag: meal.id,
+              tag: meal.docID,
               child: ProgressiveImage(
                 placeholder: null,
                 thumbnail: NetworkImage(meal.thumbUrl),
@@ -57,6 +54,29 @@ class MealItem extends StatelessWidget {
                 width: double.infinity,
               ),
             ),
+            Visibility(
+              visible: (currentUser != null && currentUser?.isAdmin == false),
+              child: Positioned(
+                top: 5,
+                right: 5,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      // NEED TO IMPLEMENT ADD TO CART LOGIC
+                      onAddToCart(meal);
+                    },
+                    icon: Icon(
+                      Icons.shopping_cart,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Positioned(
               bottom: 0,
               left: 0,
@@ -64,24 +84,34 @@ class MealItem extends StatelessWidget {
               child: Container(
                 color: Colors.black54,
                 padding:
-                    const EdgeInsets.symmetric(vertical: 6, horizontal: 44),
+                    const EdgeInsets.symmetric(vertical: 6, horizontal: 20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      meal.title,
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis, // Very long text ...
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            meal.title,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis, // Very long text ...
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onBackground,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         MealItemTrait(
                           icon: Icons.schedule,

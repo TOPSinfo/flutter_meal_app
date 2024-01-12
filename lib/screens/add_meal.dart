@@ -2,12 +2,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svprogresshud/flutter_svprogresshud.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:meal_app/main.dart';
 import 'package:meal_app/models/category.dart';
 import 'package:meal_app/models/meal.dart';
 import 'package:meal_app/widgets/dynamic_textfield.dart';
-import 'package:multiselect/multiselect.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:radio_group_v2/radio_group_v2.dart';
 
@@ -17,20 +16,20 @@ class AddMealScreen extends StatefulWidget {
   const AddMealScreen({
     super.key,
     this.meal,
-    required this.arrCategories,
+    required this.category,
   });
 
   final Meal? meal;
-  final List<Categoryy> arrCategories;
+  final Categoryy category;
 
   @override
   State<AddMealScreen> createState() => _AddMealScreenState();
 }
 
 class _AddMealScreenState extends State<AddMealScreen> {
-  TextEditingController idController = TextEditingController();
   TextEditingController titleController = TextEditingController();
   TextEditingController durationController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
 
   RadioGroupController glutonController = RadioGroupController();
   RadioGroupController veganController = RadioGroupController();
@@ -74,15 +73,23 @@ class _AddMealScreenState extends State<AddMealScreen> {
   @override
   void dispose() {
     super.dispose();
-
-    idController.dispose();
+    titleController.dispose();
     durationController.dispose();
+    priceController.dispose();
   }
 
   @override
   void initState() {
     _urlToFile();
     super.initState();
+  }
+
+  void _hideProgress() {
+    context.loaderOverlay.hide();
+  }
+
+  void _showProgress() {
+    context.loaderOverlay.show();
   }
 
   void _showToastMessage(String message) {
@@ -97,16 +104,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
   void _urlToFile() async {
     if (widget.meal != null) {
       var meal = widget.meal;
-      idController.text = meal!.id;
-      titleController.text = meal.title;
+      titleController.text = meal!.title;
       durationController.text = '${meal.duration}';
+      priceController.text = '${meal.price}';
       veganController.selectAt(meal.isVegan ? 0 : 1);
       vegetarianController.selectAt(meal.isVegetarian ? 0 : 1);
       lactoseController.selectAt(meal.isLactoseFree ? 0 : 1);
-      var categorie = widget.arrCategories
-          .where((element) => meal.categories.contains(element.id))
-          .toList();
-      selectedCategories = categorie.map((e) => e.title).toList();
       ingredients = meal.ingredients;
       steps = meal.steps;
       selectedAffordability = meal.affordability.name.capitalize();
@@ -125,27 +128,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   Future<void> _checkValidationsAndSaveMealInFireStoreDatabase(
       BuildContext context) async {
-    List<String> arrSelectedCategoryIds = [];
-
-    for (var availableCategory in widget.arrCategories) {
-      if (selectedCategories.contains(availableCategory.title)) {
-        arrSelectedCategoryIds.add(availableCategory.id);
-      }
-    }
-    if (kDebugMode) {
-      print(arrSelectedCategoryIds);
-    }
-
     String isGlutonFree = glutonController.value.toString();
     String isVeganFree = veganController.value.toString();
     String isVegetarian = vegetarianController.value.toString();
     String isLactose = lactoseController.value.toString();
 
-    if (idController.text.trim().isEmpty) {
-      _showToastMessage("Please enter Id.");
-    } else if (arrSelectedCategoryIds.isEmpty) {
-      _showToastMessage("Please select atleast 1 Category.");
-    } else if (titleController.text.trim().isEmpty) {
+    if (titleController.text.trim().isEmpty) {
       _showToastMessage("Please enter Meal Title.");
     } else if (selectedAffordability.trim().isEmpty) {
       _showToastMessage("Please select Meal Affordability.");
@@ -155,6 +143,8 @@ class _AddMealScreenState extends State<AddMealScreen> {
       _showToastMessage("Please select Meal Image.");
     } else if (durationController.text.trim().isEmpty) {
       _showToastMessage("Please enter Meal preparation Duration.");
+    } else if (priceController.text.trim().isEmpty) {
+      _showToastMessage("Please enter Meal price.");
     } else if (ingredients.length == 1 && ingredients[0].trim().isEmpty) {
       _showToastMessage("Please add Meal Ingredients.");
     } else if (steps.length == 1 && steps[0].trim().isEmpty) {
@@ -174,7 +164,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
       String documentID =
           (widget.meal != null) ? widget.meal!.docID : getRandomString(20);
 
-      SVProgressHUD.show();
+      _showProgress();
 
       if (_selectedImage != null) {
         mealURL = await uploadMealImageToStorage(documentID);
@@ -185,16 +175,22 @@ class _AddMealScreenState extends State<AddMealScreen> {
         mealURL = widget.meal?.imageUrl ?? "";
       }
 
+      ingredients = ingredients
+          .where((ingredient) => ingredient.trim().isNotEmpty)
+          .toList();
+      steps = steps.where((step) => step.trim().isNotEmpty).toList();
+
       Map<String, dynamic> mealData = {
-        'id': idController.text.trim(),
+        'id': widget.category.id.trim(),
         'docId': documentID,
-        'categories': arrSelectedCategoryIds,
+        'categoryId': widget.category.id,
         'title': titleController.text.trim(),
         'affordability': selectedAffordability.toLowerCase(),
         'complexity': selectedcomplexity.toLowerCase(),
         'imageUrl': mealURL,
         'thumbUrl': mealURL,
         'duration': int.parse(durationController.text),
+        'price': int.parse(priceController.text),
         'ingredients': ingredients,
         'steps': steps,
         'isGlutenFree': (isGlutonFree == "Yes" ? true : false),
@@ -205,22 +201,26 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
       if (widget.meal != null) {
         await collection.doc(documentID).update(mealData).then((value) {
-          SVProgressHUD.dismiss();
+          _hideProgress();
           _showToastMessage("Meal Added Successfully");
           int count = 3;
           Navigator.of(context).popUntil((_) => count-- <= 0);
         }).catchError((error) {
-          print('Update failed: $error');
-          SVProgressHUD.dismiss();
+          if (kDebugMode) {
+            print('Update failed: $error');
+          }
+          _hideProgress();
         });
       } else {
         await collection.doc(documentID).set(mealData).then((value) {
-          SVProgressHUD.dismiss();
+          _hideProgress();
           _showToastMessage("Meal Added Successfully");
           Navigator.pop(context);
         }).catchError((error) {
-          print('Update failed: $error');
-          SVProgressHUD.dismiss();
+          if (kDebugMode) {
+            print('Update failed: $error');
+          }
+          _hideProgress();
         });
       }
     }
@@ -328,34 +328,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 CenterTitleWidget(
                     title: "General",
                     bottomSheetBackgroundStyle: bottomSheetBackgroundStyle),
-                IdWidget(
-                    idController: idController,
-                    bottomSheetBackgroundStyle: bottomSheetBackgroundStyle),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: DropDownMultiSelect(
-                    decoration: const InputDecoration(
-                      border: UnderlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 12,
-                      ),
-                    ),
-                    selected_values_style: bottomSheetBackgroundStyle,
-                    hintStyle: bottomSheetBackgroundStyle,
-                    onChanged: (List<String> x) {
-                      setState(() {
-                        selectedCategories = x;
-                      });
-                    },
-                    options: widget.arrCategories.map((e) => e.title).toList(),
-                    selectedValues: selectedCategories,
-                    whenEmpty: 'Select Category',
-                  ),
-                ),
                 TitleWidget(
-                    titleController: titleController,
-                    bottomSheetBackgroundStyle: bottomSheetBackgroundStyle),
+                  titleController: titleController,
+                  bottomSheetBackgroundStyle: bottomSheetBackgroundStyle,
+                  placeHolderText: 'Meal Title',
+                  errorMessageText: 'Please enter meal title.',
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: SizedBox(
@@ -420,6 +398,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: DurationWidget(
                       durationController: durationController,
+                      bottomSheetBackgroundStyle: bottomSheetBackgroundStyle),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: PriceWidget(
+                      priceController: priceController,
                       bottomSheetBackgroundStyle: bottomSheetBackgroundStyle),
                 ),
                 CenterTitleWidget(
@@ -558,20 +542,24 @@ class TitleWidget extends StatelessWidget {
     super.key,
     required this.titleController,
     required this.bottomSheetBackgroundStyle,
+    required this.placeHolderText,
+    required this.errorMessageText,
   });
 
   final TextEditingController titleController;
   final TextStyle bottomSheetBackgroundStyle;
+  final String placeHolderText;
+  final String errorMessageText;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: titleController,
-      decoration: const InputDecoration(hintText: "Meal Title"),
+      decoration: InputDecoration(hintText: placeHolderText),
       style: bottomSheetBackgroundStyle,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter id.';
+          return errorMessageText;
         }
         return null;
       },
@@ -630,11 +618,50 @@ class DurationWidget extends StatelessWidget {
         FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
         FilteringTextInputFormatter.digitsOnly
       ],
-      decoration: const InputDecoration(hintText: "Duration"),
+      decoration: const InputDecoration(
+        hintText: "Duration",
+        counterText: "",
+      ),
       style: bottomSheetBackgroundStyle,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter Duration.';
+        }
+        return null;
+      },
+    );
+  }
+}
+
+// PRICE Widget
+class PriceWidget extends StatelessWidget {
+  const PriceWidget({
+    super.key,
+    required this.priceController,
+    required this.bottomSheetBackgroundStyle,
+  });
+
+  final TextEditingController priceController;
+  final TextStyle bottomSheetBackgroundStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      maxLength: 3,
+      controller: priceController,
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+        FilteringTextInputFormatter.digitsOnly
+      ],
+      decoration: const InputDecoration(
+        hintText: "Price",
+        counterText: "",
+      ),
+      style: bottomSheetBackgroundStyle,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter Price.';
         }
         return null;
       },

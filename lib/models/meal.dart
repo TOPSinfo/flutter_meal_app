@@ -13,16 +13,18 @@ enum Affordability {
 }
 
 class Meal {
-  const Meal({
+  const Meal(
+    {
     required this.id,
     required this.docID,
-    required this.categories,
+    required this.categoryId,
     required this.title,
     required this.imageUrl,
     required this.thumbUrl,
     required this.ingredients,
     required this.steps,
     required this.duration,
+    required this.price,
     required this.complexity,
     required this.affordability,
     required this.isGlutenFree,
@@ -33,31 +35,34 @@ class Meal {
 
   final String id;
   final String docID;
-  final List<String> categories;
+  final String categoryId;
   final String title;
   final String imageUrl;
   final String thumbUrl;
   final List<String> ingredients;
   final List<String> steps;
   final int duration;
+  final int price;
   final Complexity complexity;
   final Affordability affordability;
   final bool isGlutenFree;
   final bool isLactoseFree;
   final bool isVegan;
   final bool isVegetarian;
+  
 
   factory Meal.fromJson(Map<String, dynamic> jsonData) {
     return Meal(
       id: jsonData['id'],
       docID: jsonData['docId'],
-      categories: List<String>.from(jsonData['categories']),
+      categoryId: jsonData['categoryId'],
       title: jsonData['title'],
       imageUrl: jsonData['imageUrl'],
       thumbUrl: jsonData['thumbUrl'],
       ingredients: List<String>.from(jsonData['ingredients']),
       steps: List<String>.from(jsonData['steps']),
       duration: jsonData['duration'],
+      price: jsonData['price'],
       complexity: (jsonData['complexity'] == "challenging")
           ? Complexity.challenging
           : (jsonData['complexity'] == "hard"
@@ -77,13 +82,14 @@ class Meal {
 
   static Map<String, dynamic> toMap(Meal meal) => {
         'id': meal.id,
-        'categories': meal.categories,
+        'categoryId': meal.categoryId,
         'title': meal.title,
         'imageUrl': meal.imageUrl,
         'thumbUrl': meal.thumbUrl,
         'ingredients': meal.ingredients,
         'steps': meal.steps,
         'duration': meal.duration,
+        'price': meal.price,
         'complexity': (meal.complexity == Complexity.challenging)
             ? "challenging"
             : (meal.complexity == Complexity.hard)

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svprogresshud/flutter_svprogresshud.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:meal_app/main.dart';
 import 'package:meal_app/models/category.dart';
-import 'package:meal_app/screens/add_meal.dart';
+import 'package:meal_app/screens/add_category.dart';
 import 'package:meal_app/screens/meals.dart';
 import '../widgets/category_grid_item.dart';
 
@@ -22,24 +22,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     var querySnapshot = await collection.get();
     for (var doc in querySnapshot.docs) {
       Map<String, dynamic> data = doc.data();
-      final Color itemColor = HexColor.fromHex(data['color']);
-      localCategories.add(
-        Categoryy(
-          id: data['id'],
-          title: data['title'],
-          color: itemColor,
-        ),
-      );
+      localCategories.add(Categoryy.fromMap(data));
     }
 
     setState(() {
-      SVProgressHUD.dismiss();
       categories = localCategories;
+    });
+
+    Future.delayed(const Duration(seconds: 0), () {
+      context.loaderOverlay.hide();
     });
   }
 
   void _showProgress() {
-    SVProgressHUD.show();
+    context.loaderOverlay.show();
   }
 
   @override
@@ -57,7 +53,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           categories: categories,
         ),
       ),
-    );
+    ).then((value) => _getCategoryList());
   }
 
   @override
@@ -66,16 +62,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       appBar: AppBar(
         title: const Text("Categories"),
         actions: [
-          IconButton(
-            color: Colors.white,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (ctx) => AddMealScreen(arrCategories: categories),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add),
+          Visibility(
+            visible: (currentUser != null && currentUser?.isAdmin == true),
+            child: IconButton(
+              color: Theme.of(context).colorScheme.onBackground,
+              onPressed: () {
+                Navigator.of(context)
+                    .push(
+                      MaterialPageRoute(
+                        builder: (ctx) =>
+                            const AddCategoryScreen(), //AddMealScreen(arrCategories: categories),
+                      ),
+                    )
+                    .then((value) => _getCategoryList());
+              },
+              icon: const Icon(Icons.add),
+            ),
           ),
         ],
       ),
@@ -87,24 +89,24 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               ),
             )
           : GridView(
-              padding: const EdgeInsets.all(24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 3 / 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-              ),
-              children: [
-                // availableCategories.map((category) => CategoryGridItem(category: category)).toList()
-                for (final category in categories)
-                  CategoryGridItem(
-                    category: category,
-                    onSelectCategory: () {
-                      _selectCategory(context, category);
-                    },
-                  )
-              ],
+            padding: const EdgeInsets.all(24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
             ),
+            children: [
+              // availableCategories.map((category) => CategoryGridItem(category: category)).toList()
+              for (final category in categories)
+                CategoryGridItem(
+                  category: category,
+                  onSelectCategory: () {
+                    _selectCategory(context, category);
+                  }
+                )
+            ],
+          ),
     );
   }
 }

@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="meal_app"
+        android:enableOnBackInvokedCallback="true"
+        android:label="My Meal"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-9488234482171252~1381514796"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

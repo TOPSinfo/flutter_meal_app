@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_app/main.dart';
 import '../models/category.dart';
 
 class CategoryGridItem extends StatelessWidget {
@@ -13,8 +14,7 @@ class CategoryGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: no_leading_underscores_for_local_identifiers
-    Widget _titleWidget(BuildContext context) {
+    Widget titleWidget(BuildContext context) {
       return Text(
         category.title,
         style: Theme.of(context).textTheme.titleLarge!.copyWith(
@@ -33,13 +33,13 @@ class CategoryGridItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               colors: [
-                category.color.withOpacity(0.55),
-                category.color.withOpacity(0.9),
+                HexColor.fromHex(category.color).withOpacity(0.55),
+                HexColor.fromHex(category.color).withOpacity(0.9),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             )),
-        child: _titleWidget(context),
+        child: titleWidget(context),
       ),
     );
   }
