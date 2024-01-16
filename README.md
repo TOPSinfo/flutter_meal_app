@@ -13,9 +13,9 @@ This Flutter app for meal ordering simplifies the process with its intuitive des
 
 # User App Description  
 
-In the Phone Login/Registration screen, You need to enter the Phone Number and then you will get the OTP to the number that you entered and it will redirect you to the OTP screen. Once the OTP verification is done you will be redirected to the categories screen.
+On the Phone Login/Registration screen, simply enter your phone number. You'll then receive a one-time password (OTP) via text message to the number you provided. The app will automatically take you to the OTP screen, where you'll enter the code to verify your identity. Once the verification is successful, you'll be seamlessly directed to the categories screen.
 
-If the Entered Phone number is not registered then it will redirect to the Personal Detail screen where the user can add their Profile photo, First name, Last name, and Email.
+If the phone number you entered hasn't been registered yet, no worries! You'll be guided to the Personal Details screen, where you can easily create your account. It's the perfect time to add a profile photo that showcases your personality, along with your first name, last name, and email address. We'll take care of the rest!
 
 In the Categories tab, the User can see the list of meal categories. Once the user taps on any category it will redirect to the Meals screen.
 
