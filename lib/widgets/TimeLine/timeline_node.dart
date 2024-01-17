@@ -63,7 +63,7 @@ class TimelineNode extends StatelessWidget with TimelineTileNode {
             position: indicatorPosition,
             size: indicatorSize,
             color: color,
-            child: indicatorChild,
+            childWidget: indicatorChild,
           ),
           indicatorPosition: indicatorPosition,
           position: nodePosition,

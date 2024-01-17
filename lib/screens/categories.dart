@@ -17,6 +17,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   List<Categoryy> categories = [];
   final collection = db.collection('categories').orderBy('title');
 
+  // GET CATEGORIES FROM FIREBASE
   void _getCategoryList() async {
     final List<Categoryy> localCategories = [];
     var querySnapshot = await collection.get();
@@ -29,15 +30,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       categories = localCategories;
     });
 
+    // HIDE LOADER
     Future.delayed(const Duration(seconds: 0), () {
       context.loaderOverlay.hide();
     });
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // INIT STATE
   @override
   void initState() {
     super.initState();
@@ -45,6 +49,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     _getCategoryList();
   }
 
+  // SELECT CATEGORY & REDIRECT TO THE MEAL LIST SCREEN
   void _selectCategory(BuildContext context, Categoryy category) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -56,17 +61,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     ).then((value) => _getCategoryList());
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Categories"),
         actions: [
+          // ONLY VISIBLE IF LOGGED IN USER IS ADMIN
           Visibility(
             visible: (currentUser != null && currentUser?.isAdmin == true),
             child: IconButton(
               color: Theme.of(context).colorScheme.onBackground,
               onPressed: () {
+                // REDIRECT TO ADD CATEGORY SCREEN
                 Navigator.of(context)
                     .push(
                       MaterialPageRoute(

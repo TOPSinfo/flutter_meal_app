@@ -27,6 +27,7 @@ class TimelineDeliveryNew extends StatefulWidget {
 class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
   var orderStatus = 0;
 
+  // GET COLOR BASES ON STATUS
   Color getColor(int index) {
     if (index == orderStatus) {
       return inProgressColor;
@@ -37,6 +38,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
     }
   }
 
+  // INIT STATE
   @override
   void initState() {
     super.initState();
@@ -47,6 +49,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
     }
   }
 
+  // DID UPDATE WIDGET
   @override
   void didUpdateWidget(covariant TimelineDeliveryNew oldWidget) {
     setState(() {
@@ -58,6 +61,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
     super.didUpdateWidget(oldWidget);
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Timeline.tileBuilder(
@@ -96,7 +100,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
         },
         indicatorBuilder: (_, index) {
           Color color;
-          var child;
+          Widget? child;
           if (index == orderStatus) {
             color = inProgressColor;
             child = const Padding(
@@ -131,7 +135,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
                 DotIndicator(
                   size: 30.0,
                   color: color,
-                  child: child,
+                  childWidget: child,
                 ),
               ],
             );

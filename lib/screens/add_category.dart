@@ -21,13 +21,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   TextEditingController titleController = TextEditingController();
   TextEditingController color = TextEditingController();
 
+  // CATEGORY INITIAL COLOR
   Color _pickerColor = Colors.black;
+
+  // CHANGE CATEGORY COLOR
   void changeColor(Color color) {
     setState(() {
       _pickerColor = color;
     });
   }
 
+  // CHECK VALIDATIONS AND SAVE CATEGORY IN FIRESTORE DATABASE
   Future<void> _checkValidationsAndSaveCategoryInFireStoreDatabase(
       BuildContext context) async {
     if (idController.text.isEmpty) {
@@ -54,6 +58,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
     // String documentID = getRandomString(20);
 
+    // ADD CATEGORY IN FIRESTORE DATABASE
     db.collection('categories').doc().set(category.toMap()).then(
       (value) {
         Navigator.of(context).pop();
@@ -66,6 +71,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     TextStyle bottomSheetBackgroundStyle =

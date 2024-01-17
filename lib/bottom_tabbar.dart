@@ -18,6 +18,7 @@ class BottomTabBar extends StatefulWidget {
 class _BottomTabBarState extends State<BottomTabBar> {
   int _selectedIndex = 0;
 
+  // INIT STATE
   @override
   void initState() {
     getUserCartCount();
@@ -33,6 +34,7 @@ class _BottomTabBarState extends State<BottomTabBar> {
     super.initState();
   }
 
+  // GET USER DETAILS
  void _userDetail(String uid) async {
     var value = await db.collection('users').doc(uid).get();
     var data = value.data();
@@ -44,6 +46,7 @@ class _BottomTabBarState extends State<BottomTabBar> {
     }
   }
 
+  // GET USER CART COUNT
   Future<void> getUserCartCount() async {
     cartbadgeCount.value = await getCartCount(context);
   }
@@ -60,6 +63,7 @@ class _BottomTabBarState extends State<BottomTabBar> {
     SettingScreen(),
   ];
 
+  // BOTTOM NAVIGATION BAR ITEMS FOR ADMIN
   static const List<BottomNavigationBarItem> _bottomOptionsAdmin =
       <BottomNavigationBarItem>[
     BottomNavigationBarItem(
@@ -79,6 +83,7 @@ class _BottomTabBarState extends State<BottomTabBar> {
         label: 'Setting'),
   ];
 
+  // BOTTOM NAVIGATION BAR ITEMS FOR USER
   final List<BottomNavigationBarItem> _bottomOptionsUser =
       <BottomNavigationBarItem>[
     const BottomNavigationBarItem(
@@ -107,12 +112,14 @@ class _BottomTabBarState extends State<BottomTabBar> {
         label: 'Setting'),
   ];
 
+  // CHANGE SELECTED INDEX ON BOTTOM NAVIGATION BAR ITEM CHANGE
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(

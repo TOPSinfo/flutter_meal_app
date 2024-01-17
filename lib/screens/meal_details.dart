@@ -18,7 +18,6 @@ class MealDetailsScreen extends StatefulWidget {
 
   final Meal meal;
   final Categoryy categoryy;
-  // final List<Categoryy> categories;
 
   @override
   State<MealDetailsScreen> createState() => _MealDetailsScreenState();
@@ -27,6 +26,7 @@ class MealDetailsScreen extends StatefulWidget {
 class _MealDetailsScreenState extends State<MealDetailsScreen> {
   int badgeCount = 0;
 
+  // INIT STATE
   @override
   void initState() {
     updateBadge();
@@ -34,14 +34,17 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     _showProgress();
   }
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // DELETE MEAL FROM THE FIREBASE FIRESTORE
   void _deleteMeal(BuildContext context) async {
     _showProgress();
     // DELETE IMAGE FROM STORAGE FIRST
@@ -56,6 +59,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           ),
         );
 
+        // POP TWO SCREENS AFTER MEAL DELETED SUCCESSFULLY
         int count = 2;
         Navigator.of(context).popUntil((_) => count-- <= 0);
       },
@@ -68,6 +72,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 
+  // UPDATE CART BADGE COUNT
   void updateBadge() async {
     cartbadgeCount.value = await getCartCount(context);
     setState(() {
@@ -75,6 +80,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     });
   }
 
+  // ADD MEAL TO CART
   void _addItemToCart(BuildContext context) async {
     _showProgress();
     var cart = Cart(
@@ -102,6 +108,9 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
         .doc(widget.meal.docID)
         .get();
 
+    // FIRST CHECK IF THE MEAL IS ALREADY IN THE CART
+    // IF YES THEN UPDATE THE QUANTITY
+    // IF NO THEN ADD THE MEAL TO THE CART
     if (snapshot.exists) {
       var cart = Cart.fromMap(snapshot.data()!);
 
@@ -121,8 +130,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           .then((value) {
         updateBadge();
         _hideProgress();
-        // _showToastMessage("Meal Added Successfully");
-        // Navigator.pop(context);
       }).catchError((error) {
         if (kDebugMode) {
           print('Update failed: $error');
@@ -139,8 +146,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           .then((value) {
         updateBadge();
         _hideProgress();
-        // _showToastMessage("Meal Added Successfully");
-        // Navigator.pop(context);
       }).catchError((error) {
         if (kDebugMode) {
           print('Update failed: $error');
@@ -150,6 +155,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     }
   }
 
+  // DELETE MEAL IMAGE FROM STORAGE
   Future<void> _deleteMealImageFromStorage(BuildContext context) async {
     String filePath = "${widget.meal.docID}_image";
     await FirebaseStorage.instance
@@ -163,6 +169,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     });
   }
 
+  // SHOW DELETE MEAL CONFIRMATION DIALOG
   showDeleteAlertDialog(BuildContext context) {
     TextStyle style = TextStyle(
         color: Theme.of(context).colorScheme.onBackground,
@@ -219,6 +226,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -296,67 +304,69 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Hero(
-              tag: widget.meal.id,
-              child: ProgressiveImage(
-                placeholder: null,
-                thumbnail: NetworkImage(widget.meal.thumbUrl),
-                image: NetworkImage(widget.meal.imageUrl),
-                fit: BoxFit.cover,
-                height: 300,
-                width: double.infinity,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Hero(
+                tag: widget.meal.id,
+                child: ProgressiveImage(
+                  placeholder: null,
+                  thumbnail: NetworkImage(widget.meal.thumbUrl),
+                  image: NetworkImage(widget.meal.imageUrl),
+                  fit: BoxFit.cover,
+                  height: 300,
+                  width: double.infinity,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Ingredients',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+              const SizedBox(height: 14),
+              Text(
+                'Ingredients',
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              for (final ingredient in widget.meal.ingredients)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-            ),
-            const SizedBox(height: 14),
-            for (final ingredient in widget.meal.ingredients)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Text(
-                  textAlign: TextAlign.center,
-                  ingredient,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                ),
-              ),
-            const SizedBox(height: 24),
-            Text(
-              'Steps',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    ingredient,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
                   ),
-            ),
-            const SizedBox(height: 14),
-            for (final step in widget.meal.steps)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
                 ),
-                child: Text(
-                  step,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                ),
+              const SizedBox(height: 24),
+              Text(
+                'Steps',
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-          ],
+              const SizedBox(height: 14),
+              for (final step in widget.meal.steps)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    step,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Visibility(

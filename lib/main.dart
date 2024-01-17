@@ -28,6 +28,7 @@ String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
 
 List<Meal> favoriteMeals = [];
 
+// GET CART COUNT
 Future<int> getCartCount(BuildContext context) async {
   if (auth.currentUser?.uid != null) {
     var uuid = auth.currentUser?.uid;
@@ -78,6 +79,8 @@ class MyHttpOverrides extends HttpOverrides {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // DISABLE CAPTCHA VERIFICATION CODE
+  FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
   HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
 }
@@ -91,6 +94,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isUserLoggedIn = false;
+
+  // INIT STATE
   @override
   void initState() {
     super.initState();
@@ -108,6 +113,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  // GET USER DETAIL
   void _userDetail(String uid) async {
     var value = await db.collection('users').doc(uid).get();
     var data = value.data();
@@ -139,8 +145,8 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+// EXTENSION TO CONVERT HEX STRING TO COLOR
 extension HexColor on Color {
-  /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
   static Color fromHex(String hexString) {
     final buffer = StringBuffer();
     if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
@@ -148,7 +154,6 @@ extension HexColor on Color {
     return Color(int.parse(buffer.toString(), radix: 16));
   }
 
-  /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
   String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
       '${alpha.toRadixString(16).padLeft(2, '0')}'
       '${red.toRadixString(16).padLeft(2, '0')}'

@@ -49,6 +49,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   List<String> selectedCategories = [];
 
+  // AFFORDINABILITY OPTIONS
   List<String> affordabilities = [
     "Affordable",
     "Pricey",
@@ -57,6 +58,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   String selectedAffordability = 'Affordable';
 
+  // COMPLEXITY OPTIONS
   List<String> complexities = [
     "Simple",
     "Challenging",
@@ -70,6 +72,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
   List<String> steps = [''];
   final _scrollKey = GlobalKey();
 
+  // DISPOSE TEXTFIELDS ONCE CONTROLLER IS DISPOSED
   @override
   void dispose() {
     super.dispose();
@@ -78,20 +81,24 @@ class _AddMealScreenState extends State<AddMealScreen> {
     priceController.dispose();
   }
 
+  // INIT STATE
   @override
   void initState() {
     _urlToFile();
     super.initState();
   }
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // SHOW TOAST MESSAGE
   void _showToastMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -101,6 +108,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
+  // SET MEAL DATA TO UI
   void _urlToFile() async {
     if (widget.meal != null) {
       var meal = widget.meal;
@@ -126,6 +134,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
     }
   }
 
+  // CHECK VALIDATIONS
   Future<void> _checkValidationsAndSaveMealInFireStoreDatabase(
       BuildContext context) async {
     String isGlutonFree = glutonController.value.toString();
@@ -161,11 +170,18 @@ class _AddMealScreenState extends State<AddMealScreen> {
       FocusManager.instance.primaryFocus?.unfocus();
       String mealURL = "";
       var collection = db.collection('meals');
+
+      // GENERATING NEW DOCUMENT ID WITH 20 RANDOM CHARACTERS
+      // IF ADMIN TRYING TO ADD NEW MEAL
+      // WE ARE CHECKING THE MEAL OBJECT, WETHER IT'S NULL OR NOT
+      // IF IT'S NULL THEN GENERATING DOCUMENT ID WITH 20 RANDOM CHARACTERS
+      // IF IT'S NOT NULL THEN DIRECTLY ASSIGN MEAL DOCUMENT ID
       String documentID =
           (widget.meal != null) ? widget.meal!.docID : getRandomString(20);
 
       _showProgress();
 
+      // IF SELECTED IMAGE IS NOT NULL THEN UPLOADING IMAGE TO STORAGE
       if (_selectedImage != null) {
         mealURL = await uploadMealImageToStorage(documentID);
         if (kDebugMode) {
@@ -175,11 +191,13 @@ class _AddMealScreenState extends State<AddMealScreen> {
         mealURL = widget.meal?.imageUrl ?? "";
       }
 
+      // REMOVING EMPTY INGREDIENTS AND STEPS
       ingredients = ingredients
           .where((ingredient) => ingredient.trim().isNotEmpty)
           .toList();
       steps = steps.where((step) => step.trim().isNotEmpty).toList();
 
+      // CONVERTING THE MEAL FORM DATA INTO MAP
       Map<String, dynamic> mealData = {
         'id': widget.category.id.trim(),
         'docId': documentID,
@@ -199,6 +217,8 @@ class _AddMealScreenState extends State<AddMealScreen> {
         'isLactoseFree': (isLactose == "Yes" ? true : false),
       };
 
+      // IF MEAL OBJECT IS NOT NULL THEN UPDATE THE MEAL
+      // ELSE ADD NEW MEAL
       if (widget.meal != null) {
         await collection.doc(documentID).update(mealData).then((value) {
           _hideProgress();
@@ -212,6 +232,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
           _hideProgress();
         });
       } else {
+        // ADD NEW MEAL
         await collection.doc(documentID).set(mealData).then((value) {
           _hideProgress();
           _showToastMessage("Meal Added Successfully");
@@ -226,6 +247,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
     }
   }
 
+  // UPLOAD MEAL IMAGE TO FIREBASE STORAGE
+  // ONCE IMAGE WILL UPLOADED SUCCESSFULLY WE GET URL FROM FIREBASE STORAGE
+  // AND RETURN URL
   Future<String> uploadMealImageToStorage(String docID) async {
     Reference reference =
         storageRef.child('images/meal').child('${docID}_image');
@@ -239,6 +263,10 @@ class _AddMealScreenState extends State<AddMealScreen> {
     return url;
   }
 
+  // STEPS & INGREDIENTS DYNAMIC TEXTFIELDS ADD/REMOVE BUTTON LOGIC
+  // INITIALLY THERE IS ONLY ONE EMPTY TEXTFIELD FOR STEPS AND INGREDIENTS
+  // ONCE USER WILL ADD STEP & INGREDIENT AND PRESS THE PLUS BUTTON WILL ADD NEW TEXTFIELD FOR STEP & INGREDIENT
+  // ONCE USER WILL PRESS THE MINUS BUTTON WILL REMOVE THE TEXTFIELD
   Widget _textfieldBtn(int index, bool isIngredient) {
     bool isLast = false;
     if (isIngredient) {
@@ -291,6 +319,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     TextStyle bottomSheetBackgroundStyle =
@@ -525,6 +554,7 @@ class IdWidget extends StatelessWidget {
   final TextEditingController idController;
   final TextStyle bottomSheetBackgroundStyle;
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -551,6 +581,7 @@ class TitleWidget extends StatelessWidget {
   final String placeHolderText;
   final String errorMessageText;
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -578,6 +609,7 @@ class CenterTitleWidget extends StatelessWidget {
   final TextStyle bottomSheetBackgroundStyle;
   final String title;
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -608,6 +640,7 @@ class DurationWidget extends StatelessWidget {
   final TextEditingController durationController;
   final TextStyle bottomSheetBackgroundStyle;
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -644,6 +677,7 @@ class PriceWidget extends StatelessWidget {
   final TextEditingController priceController;
   final TextStyle bottomSheetBackgroundStyle;
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -691,18 +725,21 @@ class RadioButtonWidget extends StatefulWidget {
 class _RadioButtonWidgetState extends State<RadioButtonWidget> {
   RadioGroupController? controller;
 
+  // INIT STATE
   @override
   void initState() {
     controller = widget.controller;
     super.initState();
   }
 
+  // DID UPDATE WIDGET
   @override
   void didUpdateWidget(covariant RadioButtonWidget oldWidget) {
     controller = widget.controller;
     super.didUpdateWidget(oldWidget);
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return RadioGroup(

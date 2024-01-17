@@ -19,6 +19,7 @@ class TimeLineDelivery extends StatefulWidget {
 class _TimeLineDeliveryState extends State<TimeLineDelivery> {
   int status = 0;
 
+  // INIT STATE
   @override
   void initState() {
     super.initState();
@@ -29,6 +30,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
     }
   }
 
+  // DID UPDATE WIDGET
   @override
   void didUpdateWidget(covariant TimeLineDelivery oldWidget) {
     setState(() {
@@ -40,11 +42,13 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
     super.didUpdateWidget(oldWidget);
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return ListView(
       shrinkWrap: true,
       children: <Widget>[
+        // ORDER PLACED
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -64,6 +68,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 0) ? greenColor : disableColor,
           ),
         ),
+        // ORDER ACCEPTED
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -87,6 +92,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 1) ? greenColor : disableColor,
           ),
         ),
+        // ORDER PREPARING
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -112,6 +118,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 2) ? greenColor : disableColor,
           ),
         ),
+        // ORDER READY FOR PICKUP
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -137,6 +144,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 3) ? greenColor : disableColor,
           ),
         ),
+        // ORDER OUT FOR DELIVERY
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -162,6 +170,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 4) ? greenColor : disableColor,
           ),
         ),
+        // ORDER DELIVERED
         TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.1,
@@ -193,6 +202,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
   }
 }
 
+// RIGHT CHILD SHOWING AFTER TIMELINE TIME
 class RightChild extends StatelessWidget {
   const RightChild({
     super.key,

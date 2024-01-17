@@ -19,7 +19,8 @@ class ImageInput extends StatefulWidget {
 class _ImageInputState extends State<ImageInput> {
   File? _selectedImage;
   ImageSource _imageSource = ImageSource.camera;
-  // This shows a CupertinoModalPopup which hosts a CupertinoActionSheet.
+
+  // SHOW IMAGE PICKER ACTION SHEET WITH CAMERA AND GALLERY OPTIONS
   void _showActionSheet() {
     showCupertinoModalPopup<void>(
       context: context,
@@ -66,16 +67,19 @@ class _ImageInputState extends State<ImageInput> {
     );
   }
 
+  // DID UPDATE WIDGET
   @override
   void didUpdateWidget(covariant oldWidget) {
     super.didUpdateWidget(oldWidget);
   }
 
+  // INIT STATE
   @override
   void initState() {
     super.initState();
   }
 
+  // PRESENT PICKER AND GET SELECTED IMAGE
   void _takePicture() async {
     final imagePicker = ImagePicker();
     final pickedImage =
@@ -90,6 +94,7 @@ class _ImageInputState extends State<ImageInput> {
     widget.onPickeImage(_selectedImage!);
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     Widget content = TextButton.icon(

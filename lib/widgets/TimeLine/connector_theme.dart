@@ -44,7 +44,7 @@ class ConnectorThemeData with Diagnosticable {
 
   @override
   int get hashCode {
-    return hashValues(
+    return Object.hash(
       color,
       space,
       thickness,

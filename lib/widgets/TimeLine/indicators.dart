@@ -37,8 +37,8 @@ abstract class Indicator extends StatelessWidget
         size: size,
         color: color,
         position: position,
-        border: border,
-        child: child,
+        boxBorder: border,
+        childWidget: child,
       );
 
   factory Indicator.outlined({
@@ -56,7 +56,7 @@ abstract class Indicator extends StatelessWidget
         position: position,
         backgroundColor: backgroundColor,
         borderWidth: borderWidth,
-        child: child,
+        childWidget: child,
       );
 
   factory Indicator.transparent({
@@ -78,7 +78,7 @@ abstract class Indicator extends StatelessWidget
       ContainerIndicator(
         size: size,
         position: position,
-        child: child,
+        childWidget: child,
       );
 
   @override
@@ -96,12 +96,12 @@ class ContainerIndicator extends Indicator {
     super.key,
     super.size,
     super.position,
-    this.child,
+    this.childWidget,
   }) : super(
           color: Colors.transparent,
         );
 
-  final Widget? child;
+  final Widget? childWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +109,7 @@ class ContainerIndicator extends Indicator {
     return SizedBox(
       width: size,
       height: size,
-      child: child,
+      child: childWidget,
     );
   }
 }
@@ -120,12 +120,12 @@ class DotIndicator extends Indicator {
     super.size,
     super.color,
     super.position,
-    this.border,
-    this.child,
+    this.boxBorder,
+    this.childWidget,
   });
 
-  final BoxBorder? border;
-  final Widget? child;
+  final BoxBorder? boxBorder;
+  final Widget? childWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -133,14 +133,14 @@ class DotIndicator extends Indicator {
     final effectiveColor = getEffectiveColor(context);
     return Center(
       child: Container(
-        width: effectiveSize ?? ((child == null) ? 15.0 : null),
-        height: effectiveSize ?? ((child == null) ? 15.0 : null),
+        width: effectiveSize ?? ((childWidget == null) ? 15.0 : null),
+        height: effectiveSize ?? ((childWidget == null) ? 15.0 : null),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: effectiveColor,
-          border: border,
+          border: boxBorder,
         ),
-        child: child,
+        child: childWidget,
       ),
     );
   }
@@ -154,13 +154,13 @@ class OutlinedDotIndicator extends Indicator {
     super.position,
     this.backgroundColor,
     this.borderWidth = 2.0,
-    this.child,
+    this.childWidget,
   })  : assert(size == null || size >= 0),
         assert(position == null || 0 <= position && position <= 1);
 
   final Color? backgroundColor;
   final double borderWidth;
-  final Widget? child;
+  final Widget? childWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -168,11 +168,11 @@ class OutlinedDotIndicator extends Indicator {
       size: size,
       color: backgroundColor ?? Colors.transparent,
       position: position,
-      border: Border.all(
+      boxBorder: Border.all(
         color: color ?? getEffectiveColor(context),
         width: borderWidth,
       ),
-      child: child,
+      childWidget: childWidget,
     );
   }
 }

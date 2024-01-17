@@ -21,20 +21,24 @@ class _MyCartScreenState extends State<MyCartScreen> {
   double deliveryFees = 50.0;
   double totalPayableAmount = 0.0;
 
+  // INIT STATE
   @override
   void initState() {
     getCartList(context, true);
     super.initState();
   }
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // GET CURRENT LOGGED IN USERS CART ITEMS
   void getCartList(BuildContext context, bool showLoader) async {
     if (showLoader) {
       _showProgress();
@@ -46,6 +50,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     var querySnapshot =
         await db.collection('cart').doc(uid).collection("mycart").get();
 
+    // CALCULATING CART ITEMS TOTAL AMOUNT, TAX AND DELIVERY FEES
     subtotal = 0.0;
     tax = 0.0;
     totalPayableAmount = 0.0;
@@ -60,6 +65,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     tax = subtotal * 0.5;
     totalPayableAmount = subtotal + tax + deliveryFees;
 
+    // DATA SET IN UI
     setState(() {
       _hideProgress();
       tax = subtotal * 0.05;
@@ -69,6 +75,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     });
   }
 
+  // INCREASE MEAL QUANTITY
   void _addQuantity(int index) {
     int qt = cartList[index].quantity;
     String id = cartList[index].id;
@@ -78,6 +85,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
         {'quantity': qt + 1}).then((value) => {getCartList(context, false)});
   }
 
+  // DECREASE MEAL QUANTITY
   void _deleteQuantity(int index) {
     int qt = cartList[index].quantity;
     String id = cartList[index].id;
@@ -89,6 +97,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     }
   }
 
+  // DELETE THE MEAL FROM CART
   void _deleteItem(int index) {
     String id = cartList[index].id;
     User? user = auth.currentUser;
@@ -103,6 +112,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
         .then((value) => {getCartList(context, false)});
   }
 
+  // PLACE ORDER
   void _placeOrder() {
     _showProgress();
     String documentID = getRandomString(20);
@@ -140,6 +150,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     );
   }
 
+  // DELETE ALL ITEMS FROM CART
   Future<void> deleteAll() async {
     var uid = auth.currentUser?.uid ?? "";
 
@@ -158,6 +169,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
     });
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     TextStyle amountStyle = Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -313,6 +325,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
   }
 }
 
+// QUANTITY ADD/REMOVE BUTTONS
 class PlusMinusButtons extends StatelessWidget {
   final VoidCallback deleteQuantity;
   final VoidCallback addQuantity;
@@ -355,6 +368,7 @@ class PlusMinusButtons extends StatelessWidget {
   }
 }
 
+// CART ITEM WIDGET
 class CartItem extends StatelessWidget {
   const CartItem({
     super.key,
@@ -374,8 +388,6 @@ class CartItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      // color: const Color.fromARGB(255, 255, 255, 255),
-      // elevation: 5.0,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Row(
@@ -385,18 +397,9 @@ class CartItem extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                // shape: BoxShape.circle,
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
                   image: NetworkImage(cartItem.image), fit: BoxFit.cover,
-                  // ProgressiveImage(
-                  //   placeholder: null,
-                  //   thumbnail: NetworkImage(cartItem.image),
-                  //   image: NetworkImage(cartItem.image),
-                  //   fit: BoxFit.cover,
-                  //   height: 90,
-                  //   width: 90,
-                  // ),
                 ),
               ),
             ),

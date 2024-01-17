@@ -13,6 +13,7 @@ import '../widgets/meal_item.dart';
 import 'MyOrder/order_list.dart';
 import 'meal_details.dart';
 
+// FILTER ENUM
 enum Filter {
   glutenFree,
   lactoseFree,
@@ -39,6 +40,7 @@ class _MealScreenState extends State<MealScreen> {
   List<String> filters = [];
   bool isBannerVisible = false;
 
+  // PARSE DOCUMENT SNAPSHOT DATA INTO MEAL MODEL
   void parseMealData(List<DocumentSnapshot> mealsData, bool isWantToSetState) {
     final List<Meal> localMeals = [];
 
@@ -105,6 +107,7 @@ class _MealScreenState extends State<MealScreen> {
       return true;
     }).toList();
 
+    // SORTING MEALS DATA ALPHABETIC ASCENDING ORDER
     finalData.sort((a, b) => a.title.toString().compareTo(b.title.toString()));
 
     if (isWantToSetState) {
@@ -118,14 +121,17 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // ONCE USER/ADMIN TAP ON ANY MEAL REDIRECTING TO THE MEAL DETAIL SCREEN
   void _selectMeal(BuildContext context, Meal meal) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -209,10 +215,12 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
+  // SHOW DELETE CATEGORY ALERT DIALOG
   void _selectDeleteCategory(BuildContext context, Categoryy category) {
     _showDeleteCategoryAlertDialog(context, category);
   }
 
+  // DELETE CATEGORY ALERT DIALOG
   _showDeleteCategoryAlertDialog(BuildContext context, Categoryy category) {
     TextStyle style = TextStyle(
       color: Theme.of(context).colorScheme.onBackground,
@@ -267,6 +275,7 @@ class _MealScreenState extends State<MealScreen> {
     );
   }
 
+  // DELETE CATEGORY FROM FIRESTORE
   void _deleteCategory(BuildContext context, Categoryy category) {
     _showProgress();
     db
@@ -301,29 +310,8 @@ class _MealScreenState extends State<MealScreen> {
     });
   }
 
-  // Widget noDataWidget() {
-  //   return Center(
-  //     child: Column(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         Text(
-  //           'Uh oh ... nothing here!',
-  //           style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-  //                 color: Theme.of(context).colorScheme.onBackground,
-  //               ),
-  //         ),
-  //         const SizedBox(height: 16),
-  //         Text(
-  //           'Try selecting a different category!',
-  //           style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-  //                 color: Theme.of(context).colorScheme.onBackground,
-  //               ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
+  // FETCH MEALS DATA FROM FIRESTORE
+  // FETCH ONLY THOSE MEALS WHOSE CATEGORY ID IS EQUAL TO CURRENT CATEGORY ID
   Future<QuerySnapshot> fetchMeals() async {
     final collection = db.collection('meals');
     final querySnapshot = await collection
@@ -332,6 +320,7 @@ class _MealScreenState extends State<MealScreen> {
     return querySnapshot;
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -339,6 +328,7 @@ class _MealScreenState extends State<MealScreen> {
         title: Text(widget.category.title),
         actions: [
           Visibility(
+            // ADD MEAL OPTION FOR ADMIN ONLY
             visible: (currentUser != null && currentUser?.isAdmin == true),
             child: IconButton(
               color: Theme.of(context).colorScheme.onBackground,
@@ -358,6 +348,7 @@ class _MealScreenState extends State<MealScreen> {
               icon: const Icon(Icons.add),
             ),
           ),
+          // DELETE MEAL OPTION FOR ADMIN ONLY
           Visibility(
             visible: (currentUser != null && currentUser?.isAdmin == true),
             child: IconButton(
@@ -370,50 +361,57 @@ class _MealScreenState extends State<MealScreen> {
           ),
         ],
       ),
-      // body: content,
-      body: FutureBuilder<QuerySnapshot>(
-        future: fetchMeals(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
+      // FUTURE BUILDER TO FETCH DATA FROM FIRESTORE
+      body: SafeArea(
+        child: FutureBuilder<QuerySnapshot>(
+          future: fetchMeals(),
+          builder: (context, snapshot) {
+            // ERROR WHILE FETCHING DATA
+            if (snapshot.hasError) {
+              _hideProgress();
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+        
+            // DATA FETCHING IS IN PROGRESS
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              _showProgress();
+              return Container();
+            }
+        
+            // NO DATA FOUND
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              _hideProgress();
+              return noDataWidget(context);
+            }
+        
             _hideProgress();
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            _showProgress();
-            return Container();
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            _hideProgress();
-            return noDataWidget(context);
-          }
-
-          _hideProgress();
-
-          List<DocumentSnapshot> data = snapshot.data!.docs;
-          parseMealData(data, false);
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Stack(
-              children: [
-                ListView.builder(
-                  itemCount: meals.length,
-                  itemBuilder: (ctx, index) => MealItem(
-                    meal: meals[index],
-                    onSelectMeal: (meal) {
-                      _selectMeal(context, meal);
-                    },
-                    onAddToCart: (Meal meal) {
-                      _addItemToCart(context, meal);
-                    },
+        
+            // FOUND DATA AND PARSE DOCUMENT SNAPSHOT TO MEAL OBJECT
+            List<DocumentSnapshot> data = snapshot.data!.docs;
+            parseMealData(data, false);
+        
+            // DISPLAY DATA IN LIST VIEW
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Stack(
+                children: [
+                  ListView.builder(
+                    itemCount: meals.length,
+                    itemBuilder: (ctx, index) => MealItem(
+                      meal: meals[index],
+                      onSelectMeal: (meal) {
+                        _selectMeal(context, meal);
+                      },
+                      onAddToCart: (Meal meal) {
+                        _addItemToCart(context, meal);
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

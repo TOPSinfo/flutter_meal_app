@@ -12,7 +12,6 @@ String pinkColor = "E91E63";
 
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({super.key});
-  static String verify = "";
 
   @override
   State<PhoneScreen> createState() => _PhoneScreenState();
@@ -23,12 +22,14 @@ class _PhoneScreenState extends State<PhoneScreen> {
   TextEditingController phoneController = TextEditingController();
   String phone = "";
 
+  // INIT STATE
   @override
   void initState() {
     countryController.text = "+91";
     super.initState();
   }
 
+  // HIDE LOADER & NAVIGATE TO OTP VERIFICATION SCREEN
   void _hideProgress(bool isWantToNavigate, String verificationId) {
     Future.delayed(const Duration(seconds: 2), () {
       context.loaderOverlay.hide();
@@ -44,10 +45,12 @@ class _PhoneScreenState extends State<PhoneScreen> {
     });
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // VERIFY PHONE NUMBER
   void _verifyPhone() async {
     _showProgress();
     var isValidmobile = validateMobile(phone);
@@ -57,6 +60,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
       return;
     }
 
+    // FIREBASE VERIFY PHONE NUMBER FUNCTION
     await auth.verifyPhoneNumber(
       phoneNumber: countryController.text + phone,
       verificationCompleted: (PhoneAuthCredential credential) {},
@@ -75,6 +79,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     );
   }
 
+  // VALIDATE PHONE NUMBER
   String? validateMobile(String value) {
 // Indian Mobile number are of 10 digit only
     if (value.length != 10) {
@@ -84,6 +89,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     }
   }
 
+  // PHONE NUMBER UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(

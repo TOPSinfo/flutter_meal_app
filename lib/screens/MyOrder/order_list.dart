@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../models/cart.dart';
 import '../MyOrder/order_detail.dart';
 
+// NO DATA FOUND WIDGET
 Widget noDataWidget(BuildContext context) {
   return Center(
     child: Column(
@@ -42,24 +43,29 @@ class OrderListState extends State<OrderList> {
   List<Orders> orders = [];
   final collection = db.collection('orders');
 
+  // ADMIN STREAM TO LISTEN TO ORDERS
   Stream<QuerySnapshot<Map<String, dynamic>>>? adminStream = db
       .collection('orders')
       .orderBy("orderDate", descending: true)
       .snapshots();
+  // USER STREAM TO LISTEN TO ORDERS
   Stream<QuerySnapshot<Map<String, dynamic>>>? userStream = db
       .collection('orders')
       .where('userId', isEqualTo: auth.currentUser?.uid ?? "")
       .orderBy("orderDate", descending: true)
       .snapshots();
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // PARSING DOCUMENT SNAPSHOT TO OUT CUSTOM MODEL OBJECTS AND STORED IN ARRAY
   void parseOrderData(List<DocumentSnapshot> mealsData, bool isWantToSetState) {
     final List<Orders> localOrders = [];
     for (var doc in mealsData) {
@@ -70,6 +76,7 @@ class OrderListState extends State<OrderList> {
     orders = localOrders;
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,68 +85,77 @@ class OrderListState extends State<OrderList> {
             ? 'Orders'
             : 'My Order'),
       ),
-      body: StreamBuilder(
-        stream: (currentUser != null && currentUser?.isAdmin == true)
-            ? adminStream
-            : userStream,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
+      // STREAM BUILDER WILL GETTING CALLED WHENEVER THERE IS A CHANGE IN STREAM
+      // IF CURRENT USER IS ADMIN THEN ADMIN STREAM OTHERWISE USER STREAM
+      body: SafeArea(
+        child: StreamBuilder(
+          stream: (currentUser != null && currentUser?.isAdmin == true)
+              ? adminStream
+              : userStream,
+          builder: (context, snapshot) {
+            // DATA FETCHING ERROR
+            if (snapshot.hasError) {
+              _hideProgress();
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            // DATA FETCHING IN PROGRESS
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              _showProgress();
+              return Container();
+            }
+            // NO DATA FOUND
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              _hideProgress();
+              return noDataWidget(context);
+            }
+        
             _hideProgress();
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            _showProgress();
-            return Container();
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            _hideProgress();
-            return noDataWidget(context);
-          }
-
-          _hideProgress();
-
-          List<DocumentSnapshot> data = snapshot.data!.docs;
-          parseOrderData(data, false);
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Stack(
-              children: [
-                ListView.builder(
-                  itemCount: orders.length,
-                  itemBuilder: (context, index) {
-                    var item = orders[index];
-                    return CustomMyOrderList(
-                      item: item,
-                      onTap: () {
-                        Navigator.of(context)
-                            .push(
-                          MaterialPageRoute(
-                            builder: (ctx) => OrderDetailScreen(
-                              order: item,
+        
+            // DATA FOUND & PARSE DOCUMENT SNAPSHOT TO OUR MODEL
+            List<DocumentSnapshot> data = snapshot.data!.docs;
+            parseOrderData(data, false);
+        
+            // UI
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Stack(
+                children: [
+                  ListView.builder(
+                    itemCount: orders.length,
+                    itemBuilder: (context, index) {
+                      var item = orders[index];
+                      return CustomMyOrderList(
+                        item: item,
+                        onTap: () {
+                          // TAPPING ON THE ITEM WILL NAVIGATE TO ORDER DETAIL SCREEN
+                          Navigator.of(context)
+                              .push(
+                            MaterialPageRoute(
+                              builder: (ctx) => OrderDetailScreen(
+                                order: item,
+                              ),
                             ),
-                          ),
-                        )
-                            .then((value) {
-                          if (value == true) {
-                            setState(() {});
-                          }
-                        });
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+                          )
+                              .then((value) {
+                            if (value == true) {
+                              setState(() {});
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
+// CUSTOM WIDGET FOR ORDERS LAYOUT
 class CustomMyOrderList extends StatelessWidget {
   final Orders item;
   final VoidCallback onTap;
@@ -247,6 +263,7 @@ class CustomMyOrderList extends StatelessWidget {
   }
 }
 
+// EXTENSION TO GET NUMBER OF DIGITS AFTER DECIMAL POINT
 extension E on String {
   String lastChars(int n) => substring(length - n);
 }

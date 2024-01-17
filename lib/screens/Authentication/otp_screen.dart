@@ -22,16 +22,20 @@ class OTPScreen extends StatefulWidget {
 }
 
 class _OTPScreenState extends State<OTPScreen> {
+
+  // HIDE LOADER
   void _hideProgress() {
     Future.delayed(const Duration(seconds: 2), () {
       context.loaderOverlay.hide();
     });
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // OTP VALIDATION & FIREBASE AUTHENTICATION
   void _singIn(BuildContext context) async {
     if (widget.smsCode.isEmpty || widget.smsCode.length < 6) {
       showToastMessage("Please enter valid code", context);
@@ -39,9 +43,12 @@ class _OTPScreenState extends State<OTPScreen> {
     }
 
     _showProgress();
+    // CREATE PHONE AUTH PROVIDER CREDENTIAL USING VERIFICATION-ID & SMS CODE
+    // VERIFICATION ID WHICH WE GET FROM VERIFY PHONE NUMBER FROM PREVIOUS SCREEN
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId, smsCode: widget.smsCode);
     try {
+      // SIGN IN WITH THE GIVEN CREDENTIALS
       var result = await auth.signInWithCredential(credential);
       if (result.user?.uid != null) {
         var snap = await db
@@ -49,6 +56,9 @@ class _OTPScreenState extends State<OTPScreen> {
             .where('userId', isEqualTo: result.user?.uid ?? "")
             .get();
 
+        // CHECK USER ID EXIST IN USERS TABLE OR NOT
+        // IF USER ID EXIST, IT MEANS USER IS ALREADY REGISTERED WITH US. REDIRECT USER TO DASHBOARD
+        // IF USER ID NOT EXIST, WE ARE REDIRECTING USER TO THE PERSONAL DETAIL SCREEN WHERE USER CAN FILL PERSONAL INFORMATION
         if (snap.docs.isNotEmpty) {
           currentUser = CurrentUser.fromMap(snap.docs.first.data());
           if (!context.mounted) return;
@@ -85,6 +95,7 @@ class _OTPScreenState extends State<OTPScreen> {
     }
   }
 
+  // RESENT OTP
   void _resendCode(BuildContext context) async {
     _showProgress();
     await auth.verifyPhoneNumber(
@@ -104,6 +115,7 @@ class _OTPScreenState extends State<OTPScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(

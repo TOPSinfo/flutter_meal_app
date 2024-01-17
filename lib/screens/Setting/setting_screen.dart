@@ -16,19 +16,17 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
+  // RATE APP DIALOG
   final _dialog = RatingDialog(
-    // your app's name?
     title: const Text(
       'Rate Us On App Store',
       textAlign: TextAlign.center,
       style: TextStyle(fontSize: 16),
     ),
-    // encourage your user to leave a high rating?
     message: const Text(
       'Select Number of Stars 1 - 5 to Rate This App',
       style: TextStyle(fontSize: 12),
     ),
-    // your app's logo?
     image: Image.asset(
       'assets/images/myMealLogo.png',
       width: 80,
@@ -60,6 +58,8 @@ class _SettingScreenState extends State<SettingScreen> {
     },
   );
 
+  // SIGN OUT FUNCTION
+  // REDIRECT TO PHONE SCREEN AFTER SIGN OUT
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
@@ -72,6 +72,7 @@ class _SettingScreenState extends State<SettingScreen> {
         (route) => false);
   }
 
+  // LOGOUT CONFIRMATION DIALOG
   showLogoutAlertDialog(BuildContext context) {
     TextStyle style = TextStyle(
       color: Theme.of(context).colorScheme.onBackground,
@@ -126,6 +127,7 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(

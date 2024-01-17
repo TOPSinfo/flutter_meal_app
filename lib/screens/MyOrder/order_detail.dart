@@ -30,6 +30,8 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
   double tax = 0.0;
   double deliveryFees = 50.0;
   double totalPayableAmount = 0.0;
+
+  // ORDER STATUS OPTIONS
   List<OrderStatus> orderStatusList = <OrderStatus>[
     OrderStatus('0', 'Order Placed'),
     OrderStatus('1', 'Order Accepted'),
@@ -41,6 +43,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
 
   OrderStatus? dropdownValue;
 
+  // INIT STATE
   @override
   void initState() {
     super.initState();
@@ -48,6 +51,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     tax = 0.0;
     totalPayableAmount = 0.0;
 
+    // CALCULATE SUBTOTAL, TAX AND TOTAL AMOUNT
     for (var i = 0; i < widget.order.cartItems.length; i++) {
       Cart item = widget.order.cartItems[i];
       subtotal = subtotal + (item.price * item.quantity);
@@ -63,6 +67,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     checkOrderStatusAndUpdate();
   }
 
+  // CHECK CURRENT ORDER STATUS AND UPDATE DROPDOWN VALUE
   void checkOrderStatusAndUpdate() {
     OrderStatus od = orderStatusList
         .where((element) => element.status == widget.order.status)
@@ -73,6 +78,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  // DISPLAY ORDER STATUS UPDATE MESSAGE
   void _showToastMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,6 +88,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  // ONCE ADMIN WILL CHANGE THE ORDER STATUS, UPDATE THE ORDER STATUS IN FIRESTORE
   void updateOrderStatus() {
     var collection = db.collection('orders');
     collection.doc(widget.order.id).update({
@@ -89,7 +96,6 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     }).then(
       (value) {
         _showToastMessage('Order status updated successfully.');
-        // Navigator.pop(context, true);
       },
       onError: (e) {
         if (kDebugMode) {
@@ -100,6 +106,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  // UI
   @override
   Widget build(BuildContext context) {
     TextStyle amountStyle = Theme.of(context).textTheme.titleMedium!.copyWith(

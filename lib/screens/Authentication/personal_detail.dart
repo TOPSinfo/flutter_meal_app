@@ -35,14 +35,17 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
   String navigationTitle = "Personal Details";
   CurrentUser? objLoggedInUser;
 
+  // HIDE LOADER
   void _hideProgress() {
     context.loaderOverlay.hide();
   }
 
+  // SHOW LOADER
   void _showProgress() {
     context.loaderOverlay.show();
   }
 
+  // OPEN IMAGE PICKER
   void _takePicture() async {
     final imagePicker = ImagePicker();
     final pickedImage =
@@ -55,6 +58,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     });
   }
 
+  // IMAGE PICKER BOTTOM SHEET PRESENT
   void _showActionSheet() {
     showCupertinoModalPopup<void>(
       context: context,
@@ -101,6 +105,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     );
   }
 
+  // DISPOSE TEXT EDITING CONTROLLER ON SCREEN DESTROY
   @override
   void dispose() {
     super.dispose();
@@ -111,6 +116,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     phoneController.dispose();
   }
 
+  // INIT STATE  
   @override
   void initState() {
     super.initState();
@@ -124,6 +130,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
+  // GET CURRENT LOGGED IN USER DETAIL
   void _getMyProfile() async {
     var uid = auth.currentUser?.uid ?? "";
 
@@ -149,7 +156,8 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
-  Future<String> uploadMealImageToStorage(String docID) async {
+  // UPLOAD USER IMAGE TO FIREBASE STORAGE
+  Future<String> uploadUserImageToStorage(String docID) async {
     Reference reference = storageRef.child('images/users').child(docID);
     UploadTask uploadTask = reference.putFile(_selectedImage!);
 
@@ -161,6 +169,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     return url;
   }
 
+  // CHECK VALIDATIONS BEFORE UPDATING PROFILE
   Future<void> _postProfile(BuildContext context) async {
     var uid = auth.currentUser?.uid ?? "";
     if (firstNameController.text.isEmpty) {
@@ -178,7 +187,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
 
     String profileURL = "";
     if (_selectedImage != null) {
-      profileURL = await uploadMealImageToStorage(uid);
+      profileURL = await uploadUserImageToStorage(uid);
       if (kDebugMode) {
         print(profileURL);
       }
@@ -194,6 +203,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
         phone: phoneController.text.trim(),
         imageUrl: profileURL, isAdmin: currentUser?.isAdmin == true ? true:false);
 
+    // GET CURRENT LOGGED IN USER DETAIL AFTER ADD/UPDATE THE USER
     if (isEditProfileTapped) {
       _hideProgress();
       db.collection('users').doc(uid).update(user.toMap()).then((value) {
@@ -206,6 +216,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
+  // SET THE CURRENT LOGGED IN USER DETAIL
   void _setupUserDetail(CurrentUser user) {
     setState(() {
       firstNameController.text = user.firstName;
@@ -215,6 +226,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     });
   }
 
+  // PROFILE UI
   @override
   Widget build(BuildContext context) {
     BoxDecoration decoration = BoxDecoration(
