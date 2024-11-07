@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_app/models/user.dart';
+import 'helper/constant.dart';
+import 'models/user.dart';
 import 'screens/Cart/my_cart.dart';
-import 'screens/MyOrder/order_list.dart';
+import 'screens/Order/order_list.dart';
 import 'screens/Setting/setting_screen.dart';
-import 'screens/categories.dart';
-import 'main.dart';
+import 'screens/Category/categories.dart';
 
 class BottomTabBar extends StatefulWidget {
   const BottomTabBar({super.key});
@@ -22,20 +22,30 @@ class _BottomTabBarState extends State<BottomTabBar> {
   @override
   void initState() {
     getUserCartCount();
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
     if ((uid ?? "").trim().isEmpty) {
       // NOT LOGGED IN
     } else {
       // LOGGED IN
-      var uid = auth.currentUser?.uid ?? "";
+      var uid = fAuth.currentUser?.uid ?? "";
       _userDetail(uid);
     }
     super.initState();
   }
 
-  // GET USER DETAILS
- void _userDetail(String uid) async {
+  /// Fetches user details from the Firestore database using the provided user ID (uid).
+  ///
+  /// This function retrieves the user document from the 'users' collection in Firestore,
+  /// converts the document data to a `CurrentUser` object, and updates the state with the
+  /// retrieved user data.
+  ///
+  /// The function is asynchronous and uses the `await` keyword to wait for the Firestore
+  /// operations to complete.
+  ///
+  /// Parameters:
+  /// - `uid`: A `String` representing the user ID of the user whose details are to be fetched.
+  void _userDetail(String uid) async {
     var value = await db.collection('users').doc(uid).get();
     var data = value.data();
     if (data != null) {

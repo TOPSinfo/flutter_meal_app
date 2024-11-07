@@ -3,24 +3,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:meal_app/main.dart';
-import 'package:meal_app/models/category.dart';
-import 'package:meal_app/models/meal.dart';
-import 'package:meal_app/widgets/dynamic_textfield.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:radio_group_v2/radio_group_v2.dart';
 
-import '../widgets/image_input.dart';
+import '../../helper/constant.dart';
+import '../../helper/extension.dart';
+import '../../models/category.dart';
+import '../../models/meal.dart';
+import '../../widgets/dynamic_textfield.dart';
+import '../../widgets/image_input.dart';
 
 class AddMealScreen extends StatefulWidget {
   const AddMealScreen({
     super.key,
     this.meal,
-    required this.category,
+    required this.mealCategory,
   });
 
   final Meal? meal;
-  final Categoryy category;
+  final MealCategory mealCategory;
 
   @override
   State<AddMealScreen> createState() => _AddMealScreenState();
@@ -98,7 +99,13 @@ class _AddMealScreenState extends State<AddMealScreen> {
     context.loaderOverlay.show();
   }
 
-  // SHOW TOAST MESSAGE
+  /// Displays a toast message using a SnackBar.
+  ///
+  /// This method clears any existing SnackBars and shows a new SnackBar
+  /// with the provided message.
+  ///
+  /// Parameters:
+  /// - `message`: The message to be displayed in the SnackBar.
   void _showToastMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -108,7 +115,16 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
-  // SET MEAL DATA TO UI
+  /// Populates the form fields with the data from the provided meal object.
+  ///
+  /// If the `meal` object is not null, this method sets the text controllers
+  /// with the meal's title, duration, and price. It also updates the selection
+  /// controllers for vegan, vegetarian, lactose-free, and gluten-free options.
+  /// Additionally, it sets the ingredients, steps, affordability, and complexity
+  /// fields based on the meal's properties.
+  ///
+  /// A delayed update is performed to ensure the state is properly set for the
+  /// gluten-free, vegan, vegetarian, and lactose-free options.
   void _urlToFile() async {
     if (widget.meal != null) {
       var meal = widget.meal;
@@ -134,7 +150,28 @@ class _AddMealScreenState extends State<AddMealScreen> {
     }
   }
 
-  // CHECK VALIDATIONS
+  /// Validates the meal form inputs and saves the meal data to Firestore database.
+  ///
+  /// This method performs the following steps:
+  /// 1. Validates the form inputs such as meal title, affordability, complexity, image, duration, price, ingredients, steps, and dietary options.
+  /// 2. If any validation fails, it shows a toast message indicating the missing or incorrect input.
+  /// 3. If all validations pass, it proceeds to save the meal data to Firestore.
+  /// 4. If a new meal is being added, it generates a new document ID with 20 random characters.
+  /// 5. If an existing meal is being updated, it uses the existing document ID.
+  /// 6. If an image is selected, it uploads the image to storage and gets the image URL.
+  /// 7. Removes any empty ingredients and steps from the respective lists.
+  /// 8. Converts the meal form data into a map.
+  /// 9. If updating an existing meal, it updates the meal document in Firestore.
+  /// 10. If adding a new meal, it creates a new meal document in Firestore.
+  /// 11. Shows a progress indicator while the operation is in progress.
+  /// 12. Shows a toast message indicating the success or failure of the operation.
+  /// 13. Navigates back to the previous screen upon successful completion.
+  ///
+  /// Parameters:
+  /// - `context`: The build context of the widget.
+  ///
+  /// Returns:
+  /// - A `Future<void>` indicating the completion of the operation.
   Future<void> _checkValidationsAndSaveMealInFireStoreDatabase(
       BuildContext context) async {
     String isGlutonFree = glutonController.value.toString();
@@ -199,9 +236,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
       // CONVERTING THE MEAL FORM DATA INTO MAP
       Map<String, dynamic> mealData = {
-        'id': widget.category.id.trim(),
+        'id': widget.mealCategory.id.trim(),
         'docId': documentID,
-        'categoryId': widget.category.id,
+        'categoryId': widget.mealCategory.id,
         'title': titleController.text.trim(),
         'affordability': selectedAffordability.toLowerCase(),
         'complexity': selectedcomplexity.toLowerCase(),
@@ -324,12 +361,14 @@ class _AddMealScreenState extends State<AddMealScreen> {
   Widget build(BuildContext context) {
     TextStyle bottomSheetBackgroundStyle =
         Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 15,
             );
 
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text((widget.meal != null) ? "Update Meal" : "Add Meal"),
         actions: [
           TextButton(
@@ -339,7 +378,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
             child: Text(
               (widget.meal != null) ? "Update" : "Save",
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
@@ -753,15 +792,5 @@ class _RadioButtonWidgetState extends State<RadioButtonWidget> {
             color: widget.bottomSheetBackgroundStyle.color, fontSize: 15),
       ),
     );
-  }
-}
-
-extension FileEx on File {
-  String get name => path.split(Platform.pathSeparator).last;
-}
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }

@@ -1,80 +1,15 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'bottom_tabbar.dart';
-import 'package:meal_app/models/meal.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:meal_app/models/user.dart';
-import 'package:meal_app/screens/Authentication/phone.dart';
-
-var db = FirebaseFirestore.instance;
-final storageRef = FirebaseStorage.instance.ref();
-final FirebaseAuth auth = FirebaseAuth.instance;
-CurrentUser? currentUser;
-var cartbadgeCount = ValueNotifier<int>(0);
-
-const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-Random _rnd = Random();
-
-String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
-    length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
-
-List<Meal> favoriteMeals = [];
-
-// GET CART COUNT
-Future<int> getCartCount(BuildContext context) async {
-  if (auth.currentUser?.uid != null) {
-    var uuid = auth.currentUser?.uid;
-    final snapshot =
-        await db.collection('cart').doc(uuid).collection("mycart").get();
-    return snapshot.docs.length;
-  }
-  return 0;
-}
-
-final darkTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    brightness: Brightness.dark,
-    seedColor: const Color.fromARGB(255, 131, 57, 0),
-  ),
-  textTheme: GoogleFonts.latoTextTheme(),
-);
-
-final lightTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    brightness: Brightness.light,
-    seedColor: Colors.white,
-  ),
-  textTheme: GoogleFonts.latoTextTheme(),
-);
-
-// SHOW TOAST MESSAGE
-void showToastMessage(String message, BuildContext context) {
-  ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-    ),
-  );
-}
-
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-}
+import 'helper/app_theme.dart';
+import 'helper/constant.dart';
+import 'models/user.dart';
+import 'screens/Authentication/phone.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,19 +36,29 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     // GET FIREBASE AUTH USER DATA
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
     if ((uid ?? "").trim().isEmpty) {
       // NOT LOGGED IN
     } else {
       // LOGGED IN
-      var uid = auth.currentUser?.uid ?? "";
+      var uid = fAuth.currentUser?.uid ?? "";
       _userDetail(uid);
       isUserLoggedIn = true;
     }
   }
 
   // GET USER DETAIL
+  /// Fetches user details from the database using the provided user ID (uid).
+  ///
+  /// This function retrieves the user document from the 'users' collection in the
+  /// database, converts the document data to a `CurrentUser` object, and assigns
+  /// it to the `currentUser` variable.
+  ///
+  /// The function is asynchronous and uses the `await` keyword to wait for the
+  /// database operation to complete.
+  ///
+  /// - Parameter uid: The unique identifier of the user whose details are to be fetched.
   void _userDetail(String uid) async {
     var value = await db.collection('users').doc(uid).get();
     var data = value.data();
@@ -127,9 +72,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GlobalLoaderOverlay(
       overlayColor: Colors.grey.withOpacity(0.3),
-      useDefaultLoading: false,
       overlayWidgetBuilder: (_) {
-        return  Center(
+        return Center(
           child: SpinKitFadingCircle(
             color: Theme.of(context).colorScheme.onPrimary,
             size: 40.0,
@@ -143,20 +87,4 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
-}
-
-// EXTENSION TO CONVERT HEX STRING TO COLOR
-extension HexColor on Color {
-  static Color fromHex(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
-  }
-
-  String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
-      '${alpha.toRadixString(16).padLeft(2, '0')}'
-      '${red.toRadixString(16).padLeft(2, '0')}'
-      '${green.toRadixString(16).padLeft(2, '0')}'
-      '${blue.toRadixString(16).padLeft(2, '0')}';
 }

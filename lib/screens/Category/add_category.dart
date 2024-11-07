@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_app/main.dart';
-import 'package:meal_app/screens/add_meal.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import '../models/category.dart';
+import '../../helper/constant.dart';
+import '../../models/category.dart';
+import '../../helper/extension.dart';
+import '../Meal/add_meal.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   const AddCategoryScreen({super.key});
@@ -31,7 +32,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     });
   }
 
-  // CHECK VALIDATIONS AND SAVE CATEGORY IN FIRESTORE DATABASE
+  /// Validates the input fields and saves the category in Firestore database.
+  ///
+  /// This method checks if the `idController` and `titleController` text fields
+  /// are not empty. If any of the fields are empty, it shows a `SnackBar` with
+  /// an appropriate message. If both fields are filled, it creates a `MealCategory`
+  /// object and saves it to the Firestore database. Upon successful save, it
+  /// navigates back to the previous screen. If there is an error during the save
+  /// operation, it prints the error message in debug mode.
+  ///
+  /// Parameters:
+  /// - `context`: The build context of the widget.
   Future<void> _checkValidationsAndSaveCategoryInFireStoreDatabase(
       BuildContext context) async {
     if (idController.text.isEmpty) {
@@ -50,14 +61,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       return;
     }
 
-    var category = Categoryy(
+    var category = MealCategory(
       id: idController.text,
       title: titleController.text,
       color: _pickerColor.toHex(),
     );
-
-    // String documentID = getRandomString(20);
-
     // ADD CATEGORY IN FIRESTORE DATABASE
     db.collection('categories').doc().set(category.toMap()).then(
       (value) {
@@ -76,29 +84,31 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   Widget build(BuildContext context) {
     TextStyle bottomSheetBackgroundStyle =
         Theme.of(context).textTheme.titleMedium!.copyWith(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
             );
 
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Add Category'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _checkValidationsAndSaveCategoryInFireStoreDatabase(context);
-              },
-              child: Text(
-                "Save",
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold),
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Add Category'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _checkValidationsAndSaveCategoryInFireStoreDatabase(context);
+            },
+            child: Text(
+              "Save",
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
-        body: SingleChildScrollView(
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
           key: _scrollKey,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -125,13 +135,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                   OutlinedButton(
                     style: ButtonStyle(
                         backgroundColor:
-                            MaterialStateProperty.all<Color>(_pickerColor)),
+                            WidgetStateProperty.all<Color>(_pickerColor)),
                     onPressed: () {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            backgroundColor: Theme.of(context).colorScheme.onBackground,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.onSurface,
                             title: const Text('Pick a color!'),
                             content: SingleChildScrollView(
                               child: ColorPicker(

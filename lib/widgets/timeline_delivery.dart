@@ -4,7 +4,7 @@ import 'package:timeline_tile/timeline_tile.dart';
 
 import '../models/cart.dart';
 
-var greenColor = const Color(0xFF27AA69);
+var enableColor = const Color(0xFF27AA69);
 var disableColor = const Color(0xFFDADADA);
 var padding = const EdgeInsets.symmetric(horizontal: 6);
 
@@ -55,7 +55,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
           isFirst: true,
           indicatorStyle: IndicatorStyle(
             width: 20,
-            color: (status >= 0) ? greenColor : disableColor,
+            color: (status >= 0) ? enableColor : disableColor,
             padding: padding,
           ),
           endChild: RightChild(
@@ -65,7 +65,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'We have received your order.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 0) ? greenColor : disableColor,
+            color: (status >= 0) ? enableColor : disableColor,
           ),
         ),
         // ORDER ACCEPTED
@@ -76,7 +76,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             width: 20,
             color: (status >= 0 && status < 1)
                 ? Theme.of(context).colorScheme.primary
-                : greenColor,
+                : enableColor,
             padding: padding,
           ),
           endChild: RightChild(
@@ -86,10 +86,10 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'Your order has been Accepted.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 0) ? greenColor : disableColor,
+            color: (status >= 0) ? enableColor : disableColor,
           ),
           afterLineStyle: LineStyle(
-            color: (status >= 1) ? greenColor : disableColor,
+            color: (status >= 1) ? enableColor : disableColor,
           ),
         ),
         // ORDER PREPARING
@@ -101,7 +101,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 1 && status < 2)
                 ? Theme.of(context).colorScheme.primary
                 : (status >= 1)
-                    ? greenColor
+                    ? enableColor
                     : disableColor,
             padding: padding,
           ),
@@ -112,10 +112,10 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'We are preparing your order.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 1) ? greenColor : disableColor,
+            color: (status >= 1) ? enableColor : disableColor,
           ),
           afterLineStyle: LineStyle(
-            color: (status >= 2) ? greenColor : disableColor,
+            color: (status >= 2) ? enableColor : disableColor,
           ),
         ),
         // ORDER READY FOR PICKUP
@@ -127,7 +127,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 2 && status < 3)
                 ? Theme.of(context).colorScheme.primary
                 : (status >= 2)
-                    ? greenColor
+                    ? enableColor
                     : disableColor,
             padding: padding,
           ),
@@ -138,10 +138,10 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'Your order is ready for pickup.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 2) ? greenColor : disableColor,
+            color: (status >= 2) ? enableColor : disableColor,
           ),
           afterLineStyle: LineStyle(
-            color: (status >= 3) ? greenColor : disableColor,
+            color: (status >= 3) ? enableColor : disableColor,
           ),
         ),
         // ORDER OUT FOR DELIVERY
@@ -153,7 +153,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 3 && status < 4)
                 ? Theme.of(context).colorScheme.primary
                 : (status >= 3)
-                    ? greenColor
+                    ? enableColor
                     : disableColor,
             padding: padding,
           ),
@@ -164,10 +164,10 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'Your order is out for Delivery.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 3) ? greenColor : disableColor,
+            color: (status >= 3) ? enableColor : disableColor,
           ),
           afterLineStyle: LineStyle(
-            color: (status >= 4) ? greenColor : disableColor,
+            color: (status >= 4) ? enableColor : disableColor,
           ),
         ),
         // ORDER DELIVERED
@@ -180,7 +180,7 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             color: (status >= 4 && status < 5)
                 ? Theme.of(context).colorScheme.primary
                 : (status >= 4)
-                    ? greenColor
+                    ? enableColor
                     : disableColor,
             padding: padding,
           ),
@@ -191,10 +191,10 @@ class _TimeLineDeliveryState extends State<TimeLineDelivery> {
             message: 'Your order has been Delivered.',
           ),
           beforeLineStyle: LineStyle(
-            color: (status >= 4) ? greenColor : disableColor,
+            color: (status >= 4) ? enableColor : disableColor,
           ),
           afterLineStyle: LineStyle(
-            color: (status >= 5) ? greenColor : disableColor,
+            color: (status >= 5) ? enableColor : disableColor,
           ),
         ),
       ],
@@ -243,9 +243,9 @@ class RightChild extends StatelessWidget {
                     color: disabled
                         ? Theme.of(context)
                             .colorScheme
-                            .onBackground
+                            .onSurface
                             .withOpacity(0.5)
-                        : Theme.of(context).colorScheme.onBackground,
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
@@ -255,9 +255,9 @@ class RightChild extends StatelessWidget {
                     color: disabled
                         ? Theme.of(context)
                             .colorScheme
-                            .onBackground
+                            .onSurface
                             .withOpacity(0.5)
-                        : Theme.of(context).colorScheme.onBackground),
+                        : Theme.of(context).colorScheme.onSurface),
               ),
             ],
           ),

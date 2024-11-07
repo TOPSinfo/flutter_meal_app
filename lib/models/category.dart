@@ -1,6 +1,5 @@
-
-class Categoryy {
-  const Categoryy({
+class MealCategory {
+  const MealCategory({
     required this.id,
     required this.title,
     required this.color,
@@ -10,9 +9,10 @@ class Categoryy {
   final String title;
   final String color;
 
-  factory Categoryy.fromMap(Map<String, dynamic> data) {
-  return Categoryy(id: data['id'], title: data['title'], color: data['color']);
- }
+  factory MealCategory.fromMap(Map<String, dynamic> data) {
+    return MealCategory(
+        id: data['id'], title: data['title'], color: data['color']);
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,5 +21,4 @@ class Categoryy {
       'color': color,
     };
   }
-
 }

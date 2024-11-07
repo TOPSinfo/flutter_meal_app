@@ -3,33 +3,25 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:meal_app/models/cart.dart';
-import 'package:meal_app/screens/Authentication/phone.dart';
-import 'package:meal_app/main.dart';
-import 'package:meal_app/models/category.dart';
-import 'package:meal_app/screens/add_meal.dart';
-import '../models/meal.dart';
-import '../widgets/meal_item.dart';
-import 'MyOrder/order_list.dart';
+import '../../helper/constant.dart';
+import '../../models/cart.dart';
+import '../../models/category.dart';
+import '../../models/meal.dart';
+import '../../widgets/meal_item.dart';
+import '../../widgets/no_data.dart';
+import '../Authentication/phone.dart';
+import 'add_meal.dart';
 import 'meal_details.dart';
-
-// FILTER ENUM
-enum Filter {
-  glutenFree,
-  lactoseFree,
-  vegetarian,
-  vegan,
-}
 
 class MealScreen extends StatefulWidget {
   const MealScreen({
     super.key,
-    required this.category,
+    required this.mealCategory,
     required this.categories,
   });
 
-  final Categoryy category;
-  final List<Categoryy> categories;
+  final MealCategory mealCategory;
+  final List<MealCategory> categories;
 
   @override
   State<MealScreen> createState() => _MealScreenState();
@@ -40,7 +32,26 @@ class _MealScreenState extends State<MealScreen> {
   List<String> filters = [];
   bool isBannerVisible = false;
 
-  // PARSE DOCUMENT SNAPSHOT DATA INTO MEAL MODEL
+  /// Parses meal data from a list of [DocumentSnapshot] and applies filters to the meals.
+  ///
+  /// This function processes the raw meal data, converts it into a list of [Meal] objects,
+  /// applies the specified filters, and sorts the meals in alphabetical order by title.
+  ///
+  /// If [isWantToSetState] is true, the function will call `setState` to update the UI with
+  /// the filtered and sorted meal data. Otherwise, it will update the meal data without
+  /// calling `setState`.
+  ///
+  /// Parameters:
+  /// - [mealsData]: A list of [DocumentSnapshot] containing the raw meal data.
+  /// - [isWantToSetState]: A boolean indicating whether to call `setState` to update the UI.
+  ///
+  /// The function also applies the following filters based on the `filters` list:
+  /// - Gluten-free
+  /// - Lactose-free
+  /// - Vegetarian
+  /// - Vegan
+  ///
+  /// The filtered meals are then sorted in alphabetical order by their title.
   void parseMealData(List<DocumentSnapshot> mealsData, bool isWantToSetState) {
     final List<Meal> localMeals = [];
 
@@ -80,16 +91,18 @@ class _MealScreenState extends State<MealScreen> {
       );
     }
 
-    bool isGlutonFree = filters.contains(Filter.glutenFree.name) ? true : false;
+    bool isGlutonFree =
+        filters.contains(MealFilter.glutenFree.name) ? true : false;
     bool isLactoseFree =
-        filters.contains(Filter.lactoseFree.name) ? true : false;
-    bool isVegetarian = filters.contains(Filter.vegetarian.name) ? true : false;
-    bool isVegan = filters.contains(Filter.vegan.name) ? true : false;
+        filters.contains(MealFilter.lactoseFree.name) ? true : false;
+    bool isVegetarian =
+        filters.contains(MealFilter.vegetarian.name) ? true : false;
+    bool isVegan = filters.contains(MealFilter.vegan.name) ? true : false;
 
     List<Meal> finalData = [];
 
     var filteredMeals = localMeals
-        .where((meal) => meal.categoryId == widget.category.id)
+        .where((meal) => meal.categoryId == widget.mealCategory.id)
         .toList();
     finalData = filteredMeals.where((meal) {
       if (isGlutonFree && !meal.isGlutenFree) {
@@ -131,19 +144,41 @@ class _MealScreenState extends State<MealScreen> {
     context.loaderOverlay.show();
   }
 
-  // ONCE USER/ADMIN TAP ON ANY MEAL REDIRECTING TO THE MEAL DETAIL SCREEN
+  /// Navigates to the MealDetailsScreen with the selected meal and its category.
+  ///
+  /// This method uses the Navigator to push a new route onto the stack, which
+  /// displays the MealDetailsScreen. The selected [meal] and its category
+  /// [widget.mealCategory] are passed as arguments to the MealDetailsScreen.
+  ///
+  /// [context] is the BuildContext of the current widget.
+  /// [meal] is the selected Meal object.
   void _selectMeal(BuildContext context, Meal meal) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => MealDetailsScreen(
           meal: meal,
-          categoryy: widget.category,
+          mealCategory: widget.mealCategory,
         ),
       ),
     );
   }
 
-  // ADD ITEM TO CART ON CLICK OF CART ICON
+  /// Adds a meal item to the user's cart in the Firestore database.
+  ///
+  /// This function first shows a progress indicator and then checks if the user
+  /// is authenticated. If the user is not authenticated, it navigates to the
+  /// `PhoneScreen` for authentication. If the user is authenticated, it checks
+  /// if the meal item already exists in the user's cart. If the item exists, it
+  /// updates the quantity of the item in the cart. If the item does not exist,
+  /// it adds the item to the cart.
+  ///
+  /// The function handles Firestore operations and shows a toast message upon
+  /// successful addition or update of the meal item in the cart. It also hides
+  /// the progress indicator after the operation is complete.
+  ///
+  /// Parameters:
+  /// - `context`: The build context of the widget.
+  /// - `meal`: The meal item to be added to the cart.
   void _addItemToCart(BuildContext context, Meal meal) async {
     _showProgress();
     var cart = Cart(
@@ -152,7 +187,7 @@ class _MealScreenState extends State<MealScreen> {
         price: meal.price,
         image: meal.imageUrl,
         quantity: 1);
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
 
     if ((uid ?? "").trim().isEmpty) {
@@ -216,14 +251,24 @@ class _MealScreenState extends State<MealScreen> {
   }
 
   // SHOW DELETE CATEGORY ALERT DIALOG
-  void _selectDeleteCategory(BuildContext context, Categoryy category) {
+  void _selectDeleteCategory(BuildContext context, MealCategory category) {
     _showDeleteCategoryAlertDialog(context, category);
   }
 
-  // DELETE CATEGORY ALERT DIALOG
-  _showDeleteCategoryAlertDialog(BuildContext context, Categoryy category) {
+  /// Displays an alert dialog to confirm the deletion of a meal category.
+  ///
+  /// The dialog informs the user that deleting the category will also delete all
+  /// meal items related to this category. It provides two options: "No" to cancel
+  /// the deletion and "Yes" to confirm the deletion.
+  ///
+  /// The dialog uses the current theme's color scheme for styling the text and buttons.
+  ///
+  /// Parameters:
+  /// - `context`: The build context in which the dialog is displayed.
+  /// - `category`: The meal category to be deleted.
+  _showDeleteCategoryAlertDialog(BuildContext context, MealCategory category) {
     TextStyle style = TextStyle(
-      color: Theme.of(context).colorScheme.onBackground,
+      color: Theme.of(context).colorScheme.onSurface,
     );
 
     TextStyle buttonStyle = TextStyle(
@@ -275,8 +320,20 @@ class _MealScreenState extends State<MealScreen> {
     );
   }
 
-  // DELETE CATEGORY FROM FIRESTORE
-  void _deleteCategory(BuildContext context, Categoryy category) {
+  /// Deletes a category and its associated meals from the Firestore database.
+  ///
+  /// This function performs the following steps:
+  /// 1. Shows a progress indicator.
+  /// 2. Deletes the category document from the 'categories' collection where the category ID matches.
+  /// 3. Deletes all meal documents from the 'meals' collection where the category ID matches.
+  /// 4. Hides the progress indicator.
+  /// 5. Shows a toast message indicating successful deletion.
+  /// 6. Pops the current screen from the navigation stack.
+  ///
+  /// Parameters:
+  /// - `context`: The BuildContext of the current widget.
+  /// - `category`: The MealCategory object representing the category to be deleted.
+  void _deleteCategory(BuildContext context, MealCategory category) {
     _showProgress();
     db
         .collection('categories')
@@ -310,12 +367,18 @@ class _MealScreenState extends State<MealScreen> {
     });
   }
 
-  // FETCH MEALS DATA FROM FIRESTORE
-  // FETCH ONLY THOSE MEALS WHOSE CATEGORY ID IS EQUAL TO CURRENT CATEGORY ID
+  /// Fetches meals from the Firestore database based on the category ID.
+  ///
+  /// This function queries the 'meals' collection in the Firestore database
+  /// and retrieves documents where the 'categoryId' field matches the
+  /// `mealCategory.id` of the current widget.
+  ///
+  /// Returns a [Future] that resolves to a [QuerySnapshot] containing the
+  /// results of the query.
   Future<QuerySnapshot> fetchMeals() async {
     final collection = db.collection('meals');
     final querySnapshot = await collection
-        .where('categoryId', isEqualTo: widget.category.id)
+        .where('categoryId', isEqualTo: widget.mealCategory.id)
         .get();
     return querySnapshot;
   }
@@ -325,19 +388,21 @@ class _MealScreenState extends State<MealScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category.title),
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(widget.mealCategory.title),
         actions: [
           Visibility(
             // ADD MEAL OPTION FOR ADMIN ONLY
             visible: (currentUser != null && currentUser?.isAdmin == true),
             child: IconButton(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               onPressed: () {
                 Navigator.of(context)
                     .push(
                   MaterialPageRoute(
                     builder: (ctx) => AddMealScreen(
-                      category: widget.category,
+                      mealCategory: widget.mealCategory,
                     ),
                   ),
                 )
@@ -352,9 +417,9 @@ class _MealScreenState extends State<MealScreen> {
           Visibility(
             visible: (currentUser != null && currentUser?.isAdmin == true),
             child: IconButton(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               onPressed: () {
-                _selectDeleteCategory(context, widget.category);
+                _selectDeleteCategory(context, widget.mealCategory);
               },
               icon: const Icon(Icons.delete),
             ),
@@ -371,25 +436,25 @@ class _MealScreenState extends State<MealScreen> {
               _hideProgress();
               return Center(child: Text('Error: ${snapshot.error}'));
             }
-        
+
             // DATA FETCHING IS IN PROGRESS
             if (snapshot.connectionState == ConnectionState.waiting) {
               _showProgress();
               return Container();
             }
-        
+
             // NO DATA FOUND
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               _hideProgress();
               return noDataWidget(context);
             }
-        
+
             _hideProgress();
-        
+
             // FOUND DATA AND PARSE DOCUMENT SNAPSHOT TO MEAL OBJECT
             List<DocumentSnapshot> data = snapshot.data!.docs;
             parseMealData(data, false);
-        
+
             // DISPLAY DATA IN LIST VIEW
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),

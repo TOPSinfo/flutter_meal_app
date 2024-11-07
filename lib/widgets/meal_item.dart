@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:meal_app/main.dart';
 import 'package:progressive_image/progressive_image.dart';
+import '../helper/constant.dart';
 import '../models/meal.dart';
 import '../widgets/meal_item_trait.dart';
 
@@ -66,12 +66,11 @@ class MealItem extends StatelessWidget {
                   ),
                   child: IconButton(
                     onPressed: () {
-                      // NEED TO IMPLEMENT ADD TO CART LOGIC
                       onAddToCart(meal);
                     },
                     icon: Icon(
                       Icons.shopping_cart,
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -98,11 +97,11 @@ class MealItem extends StatelessWidget {
                             maxLines: 2,
                             textAlign: TextAlign.center,
                             softWrap: true,
-                            overflow: TextOverflow.ellipsis, // Very long text ...
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onBackground,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),

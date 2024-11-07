@@ -1,34 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:meal_app/main.dart';
 import 'package:intl/intl.dart';
+import '../../helper/constant.dart';
+import '../../helper/extension.dart';
 import '../../models/cart.dart';
-import '../MyOrder/order_detail.dart';
-
-// NO DATA FOUND WIDGET
-Widget noDataWidget(BuildContext context) {
-  return Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'Uh oh ... nothing here!',
-          style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                color: Theme.of(context).colorScheme.onBackground,
-              ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Try selecting a different category!',
-          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                color: Theme.of(context).colorScheme.onBackground,
-              ),
-        ),
-      ],
-    ),
-  );
-}
+import '../../widgets/no_data.dart';
+import 'order_detail.dart';
 
 class OrderList extends StatefulWidget {
   const OrderList({super.key});
@@ -51,7 +29,7 @@ class OrderListState extends State<OrderList> {
   // USER STREAM TO LISTEN TO ORDERS
   Stream<QuerySnapshot<Map<String, dynamic>>>? userStream = db
       .collection('orders')
-      .where('userId', isEqualTo: auth.currentUser?.uid ?? "")
+      .where('userId', isEqualTo: fAuth.currentUser?.uid ?? "")
       .orderBy("orderDate", descending: true)
       .snapshots();
 
@@ -65,7 +43,17 @@ class OrderListState extends State<OrderList> {
     context.loaderOverlay.show();
   }
 
-  // PARSING DOCUMENT SNAPSHOT TO OUT CUSTOM MODEL OBJECTS AND STORED IN ARRAY
+  /// Parses the order data from a list of DocumentSnapshot objects and updates the orders list.
+  ///
+  /// This function takes a list of DocumentSnapshot objects, extracts the data from each document,
+  /// converts it into an Orders object, and adds it to a local list of orders. Finally, it updates
+  /// the orders list with the local list of orders.
+  ///
+  /// If [isWantToSetState] is true, the function will also trigger a state update.
+  ///
+  /// - Parameters:
+  ///   - mealsData: A list of DocumentSnapshot objects containing the order data.
+  ///   - isWantToSetState: A boolean indicating whether to trigger a state update.
   void parseOrderData(List<DocumentSnapshot> mealsData, bool isWantToSetState) {
     final List<Orders> localOrders = [];
     for (var doc in mealsData) {
@@ -81,6 +69,8 @@ class OrderListState extends State<OrderList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text((currentUser != null && currentUser?.isAdmin == true)
             ? 'Orders'
             : 'My Order'),
@@ -108,13 +98,13 @@ class OrderListState extends State<OrderList> {
               _hideProgress();
               return noDataWidget(context);
             }
-        
+
             _hideProgress();
-        
+
             // DATA FOUND & PARSE DOCUMENT SNAPSHOT TO OUR MODEL
             List<DocumentSnapshot> data = snapshot.data!.docs;
             parseOrderData(data, false);
-        
+
             // UI
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -195,9 +185,8 @@ class CustomMyOrderList extends StatelessWidget {
                               .textTheme
                               .titleMedium!
                               .copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w700),
                           children: <TextSpan>[
                             TextSpan(
@@ -206,9 +195,8 @@ class CustomMyOrderList extends StatelessWidget {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                     fontWeight: FontWeight.normal,
                                   ),
                             ),
@@ -230,7 +218,7 @@ class CustomMyOrderList extends StatelessWidget {
                                   .copyWith(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onBackground,
+                                          .onSurface,
                                       fontWeight: FontWeight.normal),
                             );
                           },
@@ -239,7 +227,7 @@ class CustomMyOrderList extends StatelessWidget {
                       Text(
                         date.toString(),
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.normal),
                       ),
                     ],
@@ -251,7 +239,7 @@ class CustomMyOrderList extends StatelessWidget {
                 Text(
                   '\$${item.amount}',
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold),
                 ),
               ],
@@ -261,9 +249,4 @@ class CustomMyOrderList extends StatelessWidget {
       ),
     );
   }
-}
-
-// EXTENSION TO GET NUMBER OF DIGITS AFTER DECIMAL POINT
-extension E on String {
-  String lastChars(int n) => substring(length - n);
 }

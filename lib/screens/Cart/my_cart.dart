@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:meal_app/models/cart.dart';
-import 'package:meal_app/main.dart';
+
+import '../../helper/constant.dart';
+import '../../models/cart.dart';
 
 class MyCartScreen extends StatefulWidget {
   const MyCartScreen({super.key});
@@ -38,13 +39,33 @@ class _MyCartScreenState extends State<MyCartScreen> {
     context.loaderOverlay.show();
   }
 
-  // GET CURRENT LOGGED IN USERS CART ITEMS
+  /// Fetches the cart list from the Firestore database and updates the UI.
+  ///
+  /// This function retrieves the current user's cart items from the Firestore
+  /// database, calculates the subtotal, tax, and total payable amount, and
+  /// updates the UI with the fetched cart items and calculated values.
+  ///
+  /// The function performs the following steps:
+  /// 1. Shows a progress indicator if `showLoader` is true.
+  /// 2. Retrieves the current user's UID.
+  /// 3. Fetches the cart items from the Firestore database.
+  /// 4. Calculates the subtotal, tax, and total payable amount.
+  /// 5. Updates the UI with the fetched cart items and calculated values.
+  ///
+  /// Parameters:
+  /// - `context`: The build context.
+  /// - `showLoader`: A boolean indicating whether to show a progress indicator.
+  ///
+  /// Note:
+  /// - The tax is calculated as 5% of the subtotal.
+  /// - The delivery fee is 90.0 if the subtotal is less than or equal to 700,
+  ///   otherwise, it is 0.0.
   void getCartList(BuildContext context, bool showLoader) async {
     if (showLoader) {
       _showProgress();
     }
 
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
     final List<Cart> localCart = [];
     var querySnapshot =
@@ -75,32 +96,57 @@ class _MyCartScreenState extends State<MyCartScreen> {
     });
   }
 
-  // INCREASE MEAL QUANTITY
+  /// Increases the quantity of an item in the cart by 1 and updates the database.
+  ///
+  /// This method retrieves the current quantity of the item at the specified
+  /// index in the `cartList`, increments it by 1, and updates the corresponding
+  /// document in the Firestore database. After updating the quantity, it calls
+  /// `getCartList` to refresh the cart list.
+  ///
+  /// Parameters:
+  /// - `index`: The index of the item in the `cartList` whose quantity is to be increased.
   void _addQuantity(int index) {
     int qt = cartList[index].quantity;
     String id = cartList[index].id;
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
     db.collection('cart').doc(uid).collection("mycart").doc(id).update(
         {'quantity': qt + 1}).then((value) => {getCartList(context, false)});
   }
 
-  // DECREASE MEAL QUANTITY
+  /// Decreases the quantity of an item in the cart by 1 if the quantity is greater than 1.
+  ///
+  /// This function updates the quantity of the item in the Firestore database and then
+  /// refreshes the cart list.
+  ///
+  /// Parameters:
+  /// - `index`: The index of the item in the cart list.
   void _deleteQuantity(int index) {
     int qt = cartList[index].quantity;
     String id = cartList[index].id;
     if (qt > 1) {
-      User? user = auth.currentUser;
+      User? user = fAuth.currentUser;
       final uid = user?.uid;
       db.collection('cart').doc(uid).collection("mycart").doc(id).update(
           {'quantity': qt - 1}).then((value) => {getCartList(context, false)});
     }
   }
 
-  // DELETE THE MEAL FROM CART
+  /// Deletes an item from the cart at the specified index.
+  ///
+  /// This method retrieves the item ID from the `cartList` at the given index,
+  /// gets the current user's UID, and then deletes the corresponding document
+  /// from the Firestore database. After deletion, it refreshes the cart list.
+  ///
+  /// Parameters:
+  /// - `index`: The index of the item to be deleted in the `cartList`.
+  ///
+  /// Note:
+  /// - Ensure that `cartList` is properly initialized and contains valid items.
+  /// - The user must be authenticated to have a valid UID.
   void _deleteItem(int index) {
     String id = cartList[index].id;
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
 
     db
@@ -112,12 +158,25 @@ class _MyCartScreenState extends State<MyCartScreen> {
         .then((value) => {getCartList(context, false)});
   }
 
-  // PLACE ORDER
+  /// Places an order by creating a new document in the 'orders' collection in the database.
+  ///
+  /// This function performs the following steps:
+  /// 1. Shows a progress indicator.
+  /// 2. Generates a random document ID.
+  /// 3. Retrieves the current user's UID.
+  /// 4. Creates an `Orders` object with the necessary details.
+  /// 5. Adds the order to the 'orders' collection in the database.
+  /// 6. Hides the progress indicator.
+  /// 7. Shows a success message using a `SnackBar`.
+  /// 8. Clears the cart and resets the cart badge count.
+  ///
+  /// If there is an error while adding the order to the database, it hides the progress indicator
+  /// and prints the error message in debug mode.
   void _placeOrder() {
     _showProgress();
     String documentID = getRandomString(20);
 
-    var uid = auth.currentUser?.uid ?? "";
+    var uid = fAuth.currentUser?.uid ?? "";
 
     var order = Orders(
       id: documentID,
@@ -150,9 +209,16 @@ class _MyCartScreenState extends State<MyCartScreen> {
     );
   }
 
-  // DELETE ALL ITEMS FROM CART
+  /// Deletes all items from the user's cart in the Firestore database.
+  ///
+  /// This method retrieves the current user's UID and accesses the 'cart' collection
+  /// in Firestore. It then deletes all documents in the 'mycart' subcollection for
+  /// the user. After successfully deleting the documents, it clears the local cart
+  /// list and navigates back to the first route in the navigation stack.
+  ///
+  /// Returns a [Future] that completes when the deletion and navigation are done.
   Future<void> deleteAll() async {
-    var uid = auth.currentUser?.uid ?? "";
+    var uid = fAuth.currentUser?.uid ?? "";
 
     final collection =
         await db.collection("cart").doc(uid).collection('mycart').get();
@@ -173,29 +239,31 @@ class _MyCartScreenState extends State<MyCartScreen> {
   @override
   Widget build(BuildContext context) {
     TextStyle amountStyle = Theme.of(context).textTheme.titleMedium!.copyWith(
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.normal);
 
     TextStyle totalTitleStyle = Theme.of(context)
         .textTheme
         .titleMedium!
         .copyWith(
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold);
 
     TextStyle priceStyle = Theme.of(context).textTheme.titleSmall!.copyWith(
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.normal);
 
     TextStyle totalValueStyle = Theme.of(context)
         .textTheme
         .titleSmall!
         .copyWith(
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold);
 
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('My Cart'),
         centerTitle: true,
       ),
@@ -222,105 +290,108 @@ class _MyCartScreenState extends State<MyCartScreen> {
               ),
             )
           : Column(
-            children: <Widget>[
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: ListView(
-                    shrinkWrap: true,
+              children: <Widget>[
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (var i = 0; i < cartList.length; i++)
+                          CartItem(
+                            cartItem: cartList[i],
+                            addQuantity: () {
+                              _addQuantity(i);
+                            },
+                            deleteQuantity: () {
+                              _deleteQuantity(i);
+                            },
+                            deleteItem: () {
+                              _deleteItem(i);
+                            },
+                            isCart: true,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  child: Wrap(
+                    runSpacing: 10,
                     children: [
-                      for (var i = 0; i < cartList.length; i++)
-                        CartItem(
-                          cartItem: cartList[i],
-                          addQuantity: () {
-                            _addQuantity(i);
-                          },
-                          deleteQuantity: () {
-                            _deleteQuantity(i);
-                          },
-                          deleteItem: () {
-                            _deleteItem(i);
-                          },
-                          isCart: true,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Sub total : ',
+                            style: amountStyle,
+                          ),
+                          const Spacer(),
+                          Text('\$ ${subtotal.toStringAsFixed(2)}',
+                              style: priceStyle),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Taxes & Fees : ',
+                            style: amountStyle,
+                          ),
+                          const Spacer(),
+                          Text('\$ ${tax.toStringAsFixed(2)}',
+                              style: priceStyle),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Delivery Fees : ',
+                            style: amountStyle,
+                          ),
+                          const Spacer(),
+                          Text('\$ ${deliveryFees.toStringAsFixed(2)}',
+                              style: priceStyle),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Total : ',
+                            style: totalTitleStyle,
+                          ),
+                          const Spacer(),
+                          Text('\$ ${totalPayableAmount.toStringAsFixed(2)}',
+                              style: totalValueStyle),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                child: Wrap(
-                  runSpacing: 10,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Sub total : ',
-                          style: amountStyle,
-                        ),
-                        const Spacer(),
-                        Text('\$ ${subtotal.toStringAsFixed(2)}', style: priceStyle),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'Taxes & Fees : ',
-                          style: amountStyle,
-                        ),
-                        const Spacer(),
-                        Text('\$ ${tax.toStringAsFixed(2)}', style: priceStyle),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'Delivery Fees : ',
-                          style: amountStyle,
-                        ),
-                        const Spacer(),
-                        Text('\$ ${deliveryFees.toStringAsFixed(2)}', style: priceStyle),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'Total : ',
-                          style: totalTitleStyle,
-                        ),
-                        const Spacer(),
-                        Text('\$ ${totalPayableAmount.toStringAsFixed(2)}',
-                            style: totalValueStyle),
-                      ],
-                    ),
-                  ],
+                const SizedBox(
+                  height: 10,
                 ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _placeOrder();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.teal,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  child: Text(
-                    'Checkout',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _placeOrder();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.teal,
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    child: Text(
+                      'Checkout',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
     );
   }
 }
@@ -346,13 +417,13 @@ class PlusMinusButtons extends StatelessWidget {
           onPressed: deleteQuantity,
           icon: Icon(
             Icons.remove_circle_outlined,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
         ),
@@ -360,7 +431,7 @@ class PlusMinusButtons extends StatelessWidget {
           onPressed: addQuantity,
           icon: Icon(
             Icons.add_circle_outlined,
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -399,7 +470,8 @@ class CartItem extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
-                  image: NetworkImage(cartItem.image), fit: BoxFit.cover,
+                  image: NetworkImage(cartItem.image),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -416,7 +488,7 @@ class CartItem extends StatelessWidget {
                     maxLines: 1,
                     cartItem.title,
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold),
                   ),
                   Padding(
@@ -426,7 +498,7 @@ class CartItem extends StatelessWidget {
                       maxLines: 1,
                       '\$ ${cartItem.price}',
                       style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w100),
                     ),
                   ),
@@ -449,7 +521,7 @@ class CartItem extends StatelessWidget {
                           },
                           icon: Icon(
                             Icons.delete,
-                            color: Theme.of(context).colorScheme.onBackground,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../helper/constant.dart';
 import '../models/cart.dart';
 import 'TimeLine/connector_theme.dart';
 import 'TimeLine/connectors.dart';
@@ -12,7 +13,7 @@ import 'TimeLine/timeline_tile_builder.dart';
 import 'TimeLine/timelines.dart';
 
 const kTileHeight = 50.0;
-const completeColor = Color(0xff5ec792);//Color(0xffd1d2d7);
+const completeColor = Color(0xff5ec792); //Color(0xffd1d2d7);
 const inProgressColor = Color(0xff5ec792);
 const todoColor = Color(0xff5e6172);
 
@@ -27,7 +28,19 @@ class TimelineDeliveryNew extends StatefulWidget {
 class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
   var orderStatus = 0;
 
-  // GET COLOR BASES ON STATUS
+  /// Returns a color based on the given index and the current order status.
+  ///
+  /// The color returned depends on the relationship between the index and the
+  /// order status:
+  /// - If the index is equal to the order status, it returns `inProgressColor`.
+  /// - If the index is less than the order status, it returns `completeColor`.
+  /// - If the index is greater than the order status, it returns `todoColor`.
+  ///
+  /// Parameters:
+  /// - `index`: The index to compare with the order status.
+  ///
+  /// Returns:
+  /// - A `Color` representing the status of the order at the given index.
   Color getColor(int index) {
     if (index == orderStatus) {
       return inProgressColor;
@@ -76,7 +89,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
       builder: TimelineTileBuilder.connected(
         connectionDirection: ConnectionDirection.before,
         itemExtentBuilder: (_, __) =>
-            MediaQuery.of(context).size.width / _processes.length,
+            MediaQuery.of(context).size.width / orderProcesses.length,
         oppositeContentsBuilder: (context, index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 15.0),
@@ -91,7 +104,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
           return Padding(
             padding: const EdgeInsets.only(top: 15.0),
             child: Text(
-              _processes[index],
+              orderProcesses[index],
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleSmall!.copyWith(
                   color: getColor(index), fontWeight: FontWeight.w600),
@@ -146,7 +159,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
                   size: const Size(15.0, 15.0),
                   painter: _BezierPainter(
                     color: color,
-                    drawEnd: index < _processes.length - 1,
+                    drawEnd: index < orderProcesses.length - 1,
                   ),
                 ),
                 OutlinedDotIndicator(
@@ -187,7 +200,7 @@ class _TimelineDeliveryNewState extends State<TimelineDeliveryNew> {
             return null;
           }
         },
-        itemCount: _processes.length,
+        itemCount: orderProcesses.length,
       ),
     );
   }
@@ -260,12 +273,3 @@ class _BezierPainter extends CustomPainter {
         oldDelegate.drawEnd != drawEnd;
   }
 }
-
-final _processes = [
-  'Order Placed',
-  'Order Accepted',
-  'Preparing',
-  'Ready for Pickup',
-  'Out for Delivery',
-  'Delivered',
-];

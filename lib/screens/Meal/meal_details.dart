@@ -3,21 +3,21 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:meal_app/main.dart';
-import 'package:meal_app/models/cart.dart';
-import 'package:meal_app/models/category.dart';
-import 'package:meal_app/screens/Authentication/phone.dart';
-import 'package:meal_app/screens/Cart/my_cart.dart';
 import 'package:progressive_image/progressive_image.dart';
-import '../models/meal.dart';
+import '../../helper/constant.dart';
+import '../../models/cart.dart';
+import '../../models/category.dart';
+import '../../models/meal.dart';
+import '../Authentication/phone.dart';
+import '../Cart/my_cart.dart';
 import 'add_meal.dart';
 
 class MealDetailsScreen extends StatefulWidget {
   const MealDetailsScreen(
-      {super.key, required this.meal, required this.categoryy});
+      {super.key, required this.meal, required this.mealCategory});
 
   final Meal meal;
-  final Categoryy categoryy;
+  final MealCategory mealCategory;
 
   @override
   State<MealDetailsScreen> createState() => _MealDetailsScreenState();
@@ -44,7 +44,21 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     context.loaderOverlay.show();
   }
 
-  // DELETE MEAL FROM THE FIREBASE FIRESTORE
+  /// Deletes a meal from the database and its associated image from storage.
+  ///
+  /// This function performs the following steps:
+  /// 1. Shows a progress indicator.
+  /// 2. Deletes the meal image from storage by calling `_deleteMealImageFromStorage`.
+  /// 3. Deletes the meal data from the Firestore collection.
+  /// 4. Hides the progress indicator.
+  /// 5. Shows a success message using a `SnackBar`.
+  /// 6. Pops two screens from the navigation stack after the meal is deleted successfully.
+  ///
+  /// If an error occurs during the deletion process, the progress indicator is hidden
+  /// and the error is printed in debug mode.
+  ///
+  /// Parameters:
+  /// - `context`: The `BuildContext` of the widget from which this function is called.
   void _deleteMeal(BuildContext context) async {
     _showProgress();
     // DELETE IMAGE FROM STORAGE FIRST
@@ -72,7 +86,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 
-  // UPDATE CART BADGE COUNT
+  /// Updates the cart badge count by fetching the current cart count asynchronously.
+  /// After updating the badge count, it hides the progress indicator.
   void updateBadge() async {
     cartbadgeCount.value = await getCartCount(context);
     setState(() {
@@ -80,7 +95,24 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     });
   }
 
-  // ADD MEAL TO CART
+  /// Adds the current meal to the cart. If the user is not authenticated,
+  /// navigates to the PhoneScreen for authentication. If the meal is already
+  /// in the cart, updates the quantity. If the meal is not in the cart, adds
+  /// it to the cart.
+  ///
+  /// This method performs the following steps:
+  /// 1. Shows a progress indicator.
+  /// 2. Creates a `Cart` object with the current meal details.
+  /// 3. Checks if the user is authenticated.
+  /// 4. If the user is not authenticated, navigates to the PhoneScreen.
+  /// 5. If the user is authenticated, checks if the meal is already in the cart.
+  /// 6. If the meal is already in the cart, updates the quantity.
+  /// 7. If the meal is not in the cart, adds it to the cart.
+  /// 8. Updates the cart badge.
+  /// 9. Hides the progress indicator.
+  ///
+  /// Parameters:
+  /// - `context`: The build context.
   void _addItemToCart(BuildContext context) async {
     _showProgress();
     var cart = Cart(
@@ -89,7 +121,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
         price: widget.meal.price,
         image: widget.meal.imageUrl,
         quantity: 1);
-    User? user = auth.currentUser;
+    User? user = fAuth.currentUser;
     final uid = user?.uid;
 
     if ((uid ?? "").trim().isEmpty) {
@@ -155,7 +187,16 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     }
   }
 
-  // DELETE MEAL IMAGE FROM STORAGE
+  /// Deletes the meal image from Firebase Storage.
+  ///
+  /// This method constructs the file path using the meal's document ID and
+  /// attempts to delete the image from the 'images/meal/' directory in Firebase Storage.
+  /// If the deletion is successful and the app is in debug mode, a message is printed
+  /// to the console indicating the successful deletion.
+  ///
+  /// [context] is the BuildContext of the widget that calls this method.
+  ///
+  /// Throws an [Exception] if the deletion fails.
   Future<void> _deleteMealImageFromStorage(BuildContext context) async {
     String filePath = "${widget.meal.docID}_image";
     await FirebaseStorage.instance
@@ -169,10 +210,19 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     });
   }
 
-  // SHOW DELETE MEAL CONFIRMATION DIALOG
+  /// Displays an alert dialog to confirm the deletion of a meal.
+  ///
+  /// The dialog contains a message asking the user if they are sure they want to delete the meal,
+  /// and two buttons: "No" and "Yes". If the user presses "No", the dialog is dismissed. If the user
+  /// presses "Yes", the meal is deleted and the dialog is dismissed.
+  ///
+  /// The appearance of the text and buttons is styled according to the current theme.
+  ///
+  /// Parameters:
+  /// - `context`: The BuildContext in which the dialog is displayed.
   showDeleteAlertDialog(BuildContext context) {
     TextStyle style = TextStyle(
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 15,
         fontWeight: FontWeight.w400);
 
@@ -231,6 +281,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(widget.meal.title),
         actions: [
           Visibility(
@@ -238,13 +290,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
             child: IconButton(
               icon: Icon(
                 Icons.edit,
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (ctx) => AddMealScreen(
-                      category: widget.categoryy,
+                      mealCategory: widget.mealCategory,
                       meal: widget.meal,
                     ),
                   ),
@@ -257,7 +309,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
             child: IconButton(
               icon: Icon(
                 Icons.delete,
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               onPressed: () {
                 showDeleteAlertDialog(context);
@@ -274,10 +326,10 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
               child: IconButton(
                 icon: Icon(
                   Icons.shopping_cart,
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 onPressed: () {
-                  if ((auth.currentUser?.uid ?? "").trim().isEmpty) {
+                  if ((fAuth.currentUser?.uid ?? "").trim().isEmpty) {
                     Navigator.of(context)
                         .push(
                       MaterialPageRoute(
@@ -338,7 +390,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                     textAlign: TextAlign.center,
                     ingredient,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                 ),
@@ -361,7 +413,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                     step,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                 ),
@@ -385,7 +437,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
             child: Text(
               'Add To Cart',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
             ),

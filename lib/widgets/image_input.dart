@@ -20,7 +20,17 @@ class _ImageInputState extends State<ImageInput> {
   File? _selectedImage;
   ImageSource _imageSource = ImageSource.camera;
 
-  // SHOW IMAGE PICKER ACTION SHEET WITH CAMERA AND GALLERY OPTIONS
+  /// Displays a Cupertino-style action sheet with options to take a picture
+  /// using the camera or select a picture from the photo gallery.
+  ///
+  /// The action sheet includes two main actions:
+  /// - "Camera": Sets the image source to the camera, takes a picture, and
+  ///   then closes the action sheet.
+  /// - "Photo Gallery": Sets the image source to the photo gallery, takes a
+  ///   picture, and then closes the action sheet.
+  ///
+  /// There is also a cancel button that closes the action sheet without
+  /// performing any action.
   void _showActionSheet() {
     showCupertinoModalPopup<void>(
       context: context,
@@ -34,8 +44,7 @@ class _ImageInputState extends State<ImageInput> {
             },
             child: Text(
               'Camera',
-              style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
           CupertinoActionSheetAction(
@@ -46,8 +55,7 @@ class _ImageInputState extends State<ImageInput> {
             },
             child: Text(
               'Photo Gallery',
-              style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
         ],
@@ -79,7 +87,18 @@ class _ImageInputState extends State<ImageInput> {
     super.initState();
   }
 
-  // PRESENT PICKER AND GET SELECTED IMAGE
+  /// Takes a picture using the device's camera or selects an image from the gallery,
+  /// then updates the state with the selected image and calls the `onPickImage`
+  /// callback with the selected image.
+  ///
+  /// This method uses the `ImagePicker` package to handle image selection. The
+  /// image is resized to a maximum width of 600 pixels.
+  ///
+  /// If no image is selected, the method returns early without updating the state
+  /// or calling the callback.
+  ///
+  /// The selected image is stored in the `_selectedImage` variable and passed to
+  /// the `onPickImage` callback provided by the parent widget.
   void _takePicture() async {
     final imagePicker = ImagePicker();
     final pickedImage =
@@ -101,12 +120,12 @@ class _ImageInputState extends State<ImageInput> {
       onPressed: _showActionSheet,
       icon: Icon(
         Icons.camera,
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       label: Text(
         'Take a Meal Image',
         style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -141,10 +160,6 @@ class _ImageInputState extends State<ImageInput> {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-        // border: Border.all(
-        //   width: 1,
-        //   color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        // ),
       ),
       child: content,
     );

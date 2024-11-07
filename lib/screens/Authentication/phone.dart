@@ -3,12 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import '../../helper/app_theme.dart';
+import '../../helper/constant.dart';
+import '../../helper/extension.dart';
 import 'otp_screen.dart';
-
-import '../../main.dart';
-
-String greenColor = "21A558";
-String pinkColor = "E91E63";
 
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({super.key});
@@ -32,7 +30,9 @@ class _PhoneScreenState extends State<PhoneScreen> {
   // HIDE LOADER & NAVIGATE TO OTP VERIFICATION SCREEN
   void _hideProgress(bool isWantToNavigate, String verificationId) {
     Future.delayed(const Duration(seconds: 2), () {
-      context.loaderOverlay.hide();
+      if (mounted) {
+        context.loaderOverlay.hide();
+      }
       if (isWantToNavigate) {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -50,7 +50,19 @@ class _PhoneScreenState extends State<PhoneScreen> {
     context.loaderOverlay.show();
   }
 
-  // VERIFY PHONE NUMBER
+  /// Verifies the phone number entered by the user.
+  ///
+  /// This function performs the following steps:
+  /// 1. Shows a progress indicator.
+  /// 2. Validates the mobile number.
+  /// 3. If the mobile number is invalid, shows a toast message and returns.
+  /// 4. If the mobile number is valid, initiates the Firebase phone number verification process.
+  ///
+  /// The Firebase phone number verification process involves:
+  /// - `verificationCompleted`: A callback triggered when the phone number is automatically verified.
+  /// - `verificationFailed`: A callback triggered when the verification process fails. Hides the progress indicator and logs the error message if in debug mode.
+  /// - `codeSent`: A callback triggered when the verification code is sent to the user's phone. Hides the progress indicator and passes the verification ID.
+  /// - `codeAutoRetrievalTimeout`: A callback triggered when the automatic code retrieval times out. Hides the progress indicator.
   void _verifyPhone() async {
     _showProgress();
     var isValidmobile = validateMobile(phone);
@@ -61,7 +73,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     }
 
     // FIREBASE VERIFY PHONE NUMBER FUNCTION
-    await auth.verifyPhoneNumber(
+    await fAuth.verifyPhoneNumber(
       phoneNumber: countryController.text + phone,
       verificationCompleted: (PhoneAuthCredential credential) {},
       verificationFailed: (FirebaseAuthException e) {
@@ -79,9 +91,14 @@ class _PhoneScreenState extends State<PhoneScreen> {
     );
   }
 
-  // VALIDATE PHONE NUMBER
+  /// Validates a mobile number to ensure it is exactly 10 digits long.
+  ///
+  /// Returns a string error message if the mobile number is not 10 digits long,
+  /// otherwise returns null indicating the mobile number is valid.
+  ///
+  /// - Parameter value: The mobile number to validate.
+  /// - Returns: A string error message if the mobile number is invalid, otherwise null.
   String? validateMobile(String value) {
-// Indian Mobile number are of 10 digit only
     if (value.length != 10) {
       return 'Mobile Number must be of 10 digit';
     } else {
@@ -111,7 +128,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
               Text(
                 "Enter your Phone Number",
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -122,20 +139,20 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 text: TextSpan(
                   text: 'We will send you a ',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                   children: <TextSpan>[
                     TextSpan(
                       text: '6 digit',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     TextSpan(
                       text: ' verification code',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                     ),
                   ],
@@ -163,7 +180,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
                       width: 40,
                       child: TextField(
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.onBackground),
+                            color: Theme.of(context).colorScheme.onSurface),
                         controller: countryController,
                         keyboardType: TextInputType.phone,
                         decoration: const InputDecoration(
@@ -184,7 +201,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
                     Expanded(
                       child: TextField(
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.onBackground),
+                            color: Theme.of(context).colorScheme.onSurface),
                         controller: phoneController,
                         maxLength: 10,
                         inputFormatters: <TextInputFormatter>[
@@ -221,7 +238,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
                   child: Text(
                     'GENERATE OTP',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
                   ),

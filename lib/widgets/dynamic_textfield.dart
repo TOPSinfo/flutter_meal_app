@@ -36,12 +36,10 @@ class _DynamicTextFDState extends State<DynamicTextfield> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      // maxLines: null,
       controller: _controller,
       onChanged: widget.onChanged,
       style: const TextStyle(
         color: Colors.white,
-        // fontSize: 13.sp,
       ),
       decoration: InputDecoration(
         hintText: widget.isIngredient ? "Enter Ingredient" : "Enter Steps",

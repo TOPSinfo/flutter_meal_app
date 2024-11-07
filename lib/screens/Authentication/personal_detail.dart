@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import '../../bottom_tabbar.dart';
+import '../../helper/app_theme.dart';
+import '../../helper/constant.dart';
+import '../../helper/extension.dart';
 import '../../models/user.dart';
-
-import '../../main.dart';
-import 'phone.dart';
 
 class PersonalDetailScreen extends StatefulWidget {
   const PersonalDetailScreen({
@@ -46,6 +46,17 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
   }
 
   // OPEN IMAGE PICKER
+  /// Picks an image using the device's camera or gallery, and updates the state
+  /// with the selected image file.
+  ///
+  /// This method uses the `ImagePicker` package to allow the user to select an
+  /// image from their device. The selected image is then stored in the `_selectedImage`
+  /// variable as a `File` object.
+  ///
+  /// If no image is selected, the method returns early without updating the state.
+  ///
+  /// Note: Ensure that the `_imageSource` variable is properly set to either
+  /// `ImageSource.camera` or `ImageSource.gallery` before calling this method.
   void _takePicture() async {
     final imagePicker = ImagePicker();
     final pickedImage =
@@ -59,6 +70,14 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
   }
 
   // IMAGE PICKER BOTTOM SHEET PRESENT
+  /// Displays a Cupertino-style action sheet with options to take a picture
+  /// using the camera or select a photo from the gallery.
+  ///
+  /// The action sheet includes two actions:
+  /// - "Camera": Sets the image source to the camera and calls `_takePicture()`.
+  /// - "Photo Gallery": Sets the image source to the gallery and calls `_takePicture()`.
+  ///
+  /// There is also a cancel button to dismiss the action sheet without taking any action.
   void _showActionSheet() {
     showCupertinoModalPopup<void>(
       context: context,
@@ -72,8 +91,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
             },
             child: Text(
               'Camera',
-              style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
           CupertinoActionSheetAction(
@@ -84,8 +102,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
             },
             child: Text(
               'Photo Gallery',
-              style:
-                  TextStyle(color: Theme.of(context).colorScheme.onBackground),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
         ],
@@ -116,11 +133,11 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     phoneController.dispose();
   }
 
-  // INIT STATE  
+  // INIT STATE
   @override
   void initState() {
     super.initState();
-    phoneController.text = auth.currentUser?.phoneNumber ?? "";
+    phoneController.text = fAuth.currentUser?.phoneNumber ?? "";
     if (widget.isCameAfterOTPVerify) {
       navigationTitle = "Personal Details";
     } else {
@@ -130,9 +147,22 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
-  // GET CURRENT LOGGED IN USER DETAIL
+  /// Fetches the current user's profile from the Firestore database.
+  ///
+  /// This asynchronous function retrieves the user ID from the Firebase
+  /// authentication instance. It then fetches the user's document from
+  /// the 'users' collection in Firestore. If the document exists, it
+  /// converts the data to a `CurrentUser` object and updates the
+  /// `objLoggedInUser` and `currentUser` variables.
+  ///
+  /// If the user has navigated to this screen after OTP verification,
+  /// it navigates to the `BottomTabBar` screen and removes all previous
+  /// routes. Otherwise, it sets up the user details.
+  ///
+  /// The function also hides the progress indicator once the data is
+  /// fetched and processed.
   void _getMyProfile() async {
-    var uid = auth.currentUser?.uid ?? "";
+    var uid = fAuth.currentUser?.uid ?? "";
 
     var snap = await db.collection('users').doc(uid).get();
 
@@ -156,7 +186,13 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
-  // UPLOAD USER IMAGE TO FIREBASE STORAGE
+  /// Uploads the selected user image to Firebase Storage and returns the download URL.
+  ///
+  /// The image is uploaded to the path 'images/users/[docID]'.
+  ///
+  /// [docID] is the document ID used to uniquely identify the image in the storage.
+  ///
+  /// Returns a [Future<String>] that completes with the download URL of the uploaded image.
   Future<String> uploadUserImageToStorage(String docID) async {
     Reference reference = storageRef.child('images/users').child(docID);
     UploadTask uploadTask = reference.putFile(_selectedImage!);
@@ -169,9 +205,25 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     return url;
   }
 
-  // CHECK VALIDATIONS BEFORE UPDATING PROFILE
-  Future<void> _postProfile(BuildContext context) async {
-    var uid = auth.currentUser?.uid ?? "";
+  /// Updates the user profile with the provided details.
+  ///
+  /// This method performs the following steps:
+  /// 1. Retrieves the current user's UID.
+  /// 2. Validates that the first name, last name, and email fields are not empty.
+  /// 3. Unfocuses any active text fields and shows a progress indicator.
+  /// 4. If a new profile image is selected, uploads it to storage and retrieves the URL.
+  /// 5. Constructs a `CurrentUser` object with the provided details.
+  /// 6. If editing an existing profile, updates the user document in the database.
+  /// 7. If creating a new profile, sets the user document in the database.
+  /// 8. Hides the progress indicator and fetches the updated profile.
+  ///
+  /// Parameters:
+  /// - `context`: The build context of the widget calling this method.
+  ///
+  /// Returns:
+  /// A `Future<void>` indicating the completion of the profile update operation.
+  Future<void> _updateProfile(BuildContext context) async {
+    var uid = fAuth.currentUser?.uid ?? "";
     if (firstNameController.text.isEmpty) {
       showToastMessage('Please enter your first name.', context);
       return;
@@ -201,7 +253,8 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
         lastName: lastNameController.text.trim(),
         email: emailController.text.trim(),
         phone: phoneController.text.trim(),
-        imageUrl: profileURL, isAdmin: currentUser?.isAdmin == true ? true:false);
+        imageUrl: profileURL,
+        isAdmin: currentUser?.isAdmin == true ? true : false);
 
     // GET CURRENT LOGGED IN USER DETAIL AFTER ADD/UPDATE THE USER
     if (isEditProfileTapped) {
@@ -216,7 +269,14 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
     }
   }
 
-  // SET THE CURRENT LOGGED IN USER DETAIL
+  /// Sets up the user details in the respective text controllers.
+  ///
+  /// This method takes a [CurrentUser] object and assigns its properties
+  /// (first name, last name, email, and phone) to the corresponding text
+  /// controllers. The state is updated to reflect these changes.
+  ///
+  /// Parameters:
+  /// - [user]: The [CurrentUser] object containing the user's details.
   void _setupUserDetail(CurrentUser user) {
     setState(() {
       firstNameController.text = user.firstName;
@@ -239,11 +299,13 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(navigationTitle),
         actions: [
           if (!widget.isCameAfterOTPVerify)
             IconButton(
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               onPressed: () {
                 setState(() {
                   isEditProfileTapped = !isEditProfileTapped;
@@ -257,7 +319,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
               },
               icon: Icon(
                 Icons.edit,
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
         ],
@@ -277,7 +339,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                         radius: 70,
                         backgroundColor: Theme.of(context)
                             .colorScheme
-                            .onBackground
+                            .onSurface
                             .withOpacity(0.2),
                         child: _selectedImage == null
                             ? (objLoggedInUser?.imageUrl ?? "").isEmpty
@@ -357,7 +419,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                       controller: firstNameController,
                       keyboardType: TextInputType.name,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.onBackground),
+                          color: Theme.of(context).colorScheme.onSurface),
                       maxLength: 50,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -382,7 +444,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                         controller: lastNameController,
                         keyboardType: TextInputType.name,
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.onBackground),
+                            color: Theme.of(context).colorScheme.onSurface),
                         maxLength: 50,
                         decoration: const InputDecoration(
                           border: InputBorder.none,
@@ -406,7 +468,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.onBackground),
+                          color: Theme.of(context).colorScheme.onSurface),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: "Email",
@@ -436,8 +498,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                         child: Text(
                           "+91",
                           style: TextStyle(
-                              color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              color: Theme.of(context).colorScheme.onSurface),
                         ),
                       ),
                       Text(
@@ -454,8 +515,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                         child: TextField(
                           readOnly: true,
                           style: TextStyle(
-                              color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              color: Theme.of(context).colorScheme.onSurface),
                           controller: phoneController,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
@@ -471,7 +531,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 40),
                     child: ElevatedButton(
                       onPressed: () {
-                        _postProfile(context);
+                        _updateProfile(context);
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -481,7 +541,7 @@ class _PersonalDetailScreenState extends State<PersonalDetailScreen> {
                       child: Text(
                         widget.isCameAfterOTPVerify ? 'SAVE' : 'UPDATE',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                       ),

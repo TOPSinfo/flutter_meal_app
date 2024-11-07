@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import '../../bottom_tabbar.dart';
-import '../../main.dart';
 import '../Authentication/personal_detail.dart';
+import '../../bottom_tabbar.dart';
+import '../../helper/constant.dart';
 import '../../models/user.dart';
 
 // ignore: must_be_immutable
@@ -22,7 +22,6 @@ class OTPScreen extends StatefulWidget {
 }
 
 class _OTPScreenState extends State<OTPScreen> {
-
   // HIDE LOADER
   void _hideProgress() {
     Future.delayed(const Duration(seconds: 2), () {
@@ -35,6 +34,20 @@ class _OTPScreenState extends State<OTPScreen> {
     context.loaderOverlay.show();
   }
 
+  /// Handles the sign-in process using OTP validation and Firebase authentication.
+  ///
+  /// This function performs the following steps:
+  /// 1. Validates the OTP code entered by the user.
+  /// 2. Shows a progress indicator.
+  /// 3. Creates a phone authentication credential using the verification ID and SMS code.
+  /// 4. Attempts to sign in with the given credentials.
+  /// 5. Checks if the user ID exists in the 'users' collection in Firestore.
+  ///    - If the user ID exists, redirects the user to the dashboard.
+  ///    - If the user ID does not exist, redirects the user to the personal detail screen.
+  /// 6. Handles any Firebase authentication exceptions and displays an error message if needed.
+  ///
+  /// Parameters:
+  /// - `context`: The BuildContext of the current widget.
   // OTP VALIDATION & FIREBASE AUTHENTICATION
   void _singIn(BuildContext context) async {
     if (widget.smsCode.isEmpty || widget.smsCode.length < 6) {
@@ -49,7 +62,7 @@ class _OTPScreenState extends State<OTPScreen> {
         verificationId: widget.verificationId, smsCode: widget.smsCode);
     try {
       // SIGN IN WITH THE GIVEN CREDENTIALS
-      var result = await auth.signInWithCredential(credential);
+      var result = await fAuth.signInWithCredential(credential);
       if (result.user?.uid != null) {
         var snap = await db
             .collection('users')
@@ -95,10 +108,22 @@ class _OTPScreenState extends State<OTPScreen> {
     }
   }
 
-  // RESENT OTP
+  /// Resends the OTP code to the user's phone number.
+  ///
+  /// This method triggers the phone number verification process again,
+  /// showing a progress indicator while the verification is in progress.
+  ///
+  /// The verification process involves the following steps:
+  /// - `verificationCompleted`: Called when the verification is completed successfully.
+  /// - `verificationFailed`: Called when the verification fails. Hides the progress indicator.
+  /// - `codeSent`: Called when the OTP code is sent successfully. Hides the progress indicator and shows a toast message.
+  /// - `codeAutoRetrievalTimeout`: Called when the auto-retrieval of the OTP code times out. Hides the progress indicator.
+  ///
+  /// Parameters:
+  /// - `context`: The BuildContext in which the method is called.
   void _resendCode(BuildContext context) async {
     _showProgress();
-    await auth.verifyPhoneNumber(
+    await fAuth.verifyPhoneNumber(
       phoneNumber: widget.phone,
       verificationCompleted: (PhoneAuthCredential credential) {},
       verificationFailed: (FirebaseAuthException e) {
@@ -119,7 +144,10 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('')),
+      appBar: AppBar(
+          surfaceTintColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: const Text('')),
       body: Container(
         padding: const EdgeInsets.all(20),
         child: Column(

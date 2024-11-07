@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_app/main.dart';
+import '../../helper/constant.dart';
 import '../../models/cart.dart';
 import '../../widgets/timeline_new_delivery.dart';
 import '../Cart/my_cart.dart';
@@ -67,7 +67,9 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     checkOrderStatusAndUpdate();
   }
 
-  // CHECK CURRENT ORDER STATUS AND UPDATE DROPDOWN VALUE
+  /// Checks the current order status from the `orderStatusList` and updates the
+  /// `dropdownValue` with the corresponding `OrderStatus` object. If the app is
+  /// in debug mode, it prints the current order status to the console.
   void checkOrderStatusAndUpdate() {
     OrderStatus od = orderStatusList
         .where((element) => element.status == widget.order.status)
@@ -78,7 +80,12 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  // DISPLAY ORDER STATUS UPDATE MESSAGE
+  /// Displays a toast message using a SnackBar.
+  ///
+  /// This method clears any existing SnackBars before showing a new one with the provided message.
+  ///
+  /// Parameters:
+  /// - `message`: The message to be displayed in the SnackBar.
   void _showToastMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -88,7 +95,13 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  // ONCE ADMIN WILL CHANGE THE ORDER STATUS, UPDATE THE ORDER STATUS IN FIRESTORE
+  /// Updates the status of an order in the Firestore database.
+  ///
+  /// This method retrieves the 'orders' collection from the Firestore database,
+  /// and updates the status of the document corresponding to the current order's ID
+  /// with the value of `dropdownValue?.status`. Upon successful update, a toast message
+  /// is shown to indicate success. If an error occurs during the update, an error message
+  /// is printed and a toast message is shown with the error details.
   void updateOrderStatus() {
     var collection = db.collection('orders');
     collection.doc(widget.order.id).update({
@@ -110,34 +123,36 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     TextStyle amountStyle = Theme.of(context).textTheme.titleMedium!.copyWith(
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.normal);
 
     TextStyle totalTitleStyle = Theme.of(context)
         .textTheme
         .titleMedium!
         .copyWith(
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold);
 
     TextStyle priceStyle = Theme.of(context).textTheme.titleSmall!.copyWith(
-        color: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.normal);
 
     TextStyle totalValueStyle = Theme.of(context)
         .textTheme
         .titleSmall!
         .copyWith(
-            color: Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold);
 
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Order Detail'),
         actions: [
           if (currentUser != null && currentUser?.isAdmin == false)
-          IconButton(
-              color: Theme.of(context).colorScheme.onBackground,
+            IconButton(
+              color: Theme.of(context).colorScheme.onSurface,
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -162,11 +177,11 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                   if (snapshot.hasError) {
                     return const Text('Something went wrong');
                   }
-              
+
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Text("Loading");
                   }
-              
+
                   Map<String, dynamic> data =
                       snapshot.data!.data() as Map<String, dynamic>;
                   Orders order = Orders.fromMap(data);
@@ -209,7 +224,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                           // width: 1,
                         ),
                         borderRadius: BorderRadius.circular(10),
@@ -221,20 +236,22 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                           elevation: 16,
                           onChanged: (String? value) {
                             OrderStatus od = orderStatusList
-                                .where((element) => element.statusTitle == value)
+                                .where(
+                                    (element) => element.statusTitle == value)
                                 .first;
-                        
+
                             setState(() {
                               dropdownValue = od;
                               updateOrderStatus();
                             });
-                        
+
                             if (kDebugMode) {
-                              print('Order Status is ==> ${dropdownValue?.status}');
+                              print(
+                                  'Order Status is ==> ${dropdownValue?.status}');
                             }
                           },
-                          items: orderStatusList
-                              .map<DropdownMenuItem<String>>((OrderStatus value) {
+                          items: orderStatusList.map<DropdownMenuItem<String>>(
+                              (OrderStatus value) {
                             return DropdownMenuItem<String>(
                               value: value.statusTitle,
                               child: Text(
@@ -245,7 +262,7 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                                     .copyWith(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onBackground,
+                                          .onSurface,
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -269,7 +286,8 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: amountStyle,
                       ),
                       const Spacer(),
-                      Text('\$ ${subtotal.toStringAsFixed(2)}', style: priceStyle),
+                      Text('\$ ${subtotal.toStringAsFixed(2)}',
+                          style: priceStyle),
                     ],
                   ),
                   Row(
@@ -289,7 +307,8 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: amountStyle,
                       ),
                       const Spacer(),
-                      Text('\$ ${deliveryFees.toStringAsFixed(2)}', style: priceStyle),
+                      Text('\$ ${deliveryFees.toStringAsFixed(2)}',
+                          style: priceStyle),
                     ],
                   ),
                   Row(
@@ -299,7 +318,8 @@ class OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: totalTitleStyle,
                       ),
                       const Spacer(),
-                      Text('\$ ${widget.order.amount.toStringAsFixed(2)}', style: totalValueStyle),
+                      Text('\$ ${widget.order.amount.toStringAsFixed(2)}',
+                          style: totalValueStyle),
                     ],
                   ),
                 ],
